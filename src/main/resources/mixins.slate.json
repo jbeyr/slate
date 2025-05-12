@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "package": "slate.mixins.impl",
+  "refmap": "mixins.slate.refmap.json",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "entity.EntityAccessor",
+    "entity.EntityLivingBaseAccessor",
+    "entity.EntityPlayerAccessor"
+  ],
+  "client": [
+    "client.GuiScreenAccessor",
+    "client.MinecraftAccessor",
+    "entity.EntityPlayerSPAccessor",
+    "render.RenderManagerAccessor"
+  ]
+}

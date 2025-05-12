@@ -1,0 +1,16 @@
+[
+{
+  "modid": "slate",
+  "name": "Slate",
+  "description": "solves ur skill issues",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["ub"],
+  "credits": "",
+  "logoFile": "logo.jpg",
+  "screenshots": [],
+  "dependencies": []
+}
+]
