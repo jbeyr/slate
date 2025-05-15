@@ -83,7 +83,7 @@ public class Watermark extends Module {
                 String text = "";
                 switch ((int) watermarkText.getInput()) {
                     case 0:
-                        text = "§r§f§lMain §bX§9D §7";
+                        text = "§r§f§main §6" + Main.MODID + " §7";
                         break;
                     case 1:
                         text = customName;

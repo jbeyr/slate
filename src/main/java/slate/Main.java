@@ -20,10 +20,11 @@ import slate.utility.Utils;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-@Mod(modid = Main.MODID, version = "0.1")
+@Mod(modid = Main.MODID, version = Main.VERSION)
 public class Main
 {
     public static final String MODID = "slate";
+    public static final String VERSION = "0.1";
 
     public static Minecraft mc = Minecraft.getMinecraft();
     private static final ScheduledExecutorService ex = Executors.newScheduledThreadPool(4);

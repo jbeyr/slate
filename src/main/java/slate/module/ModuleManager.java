@@ -11,7 +11,6 @@ import java.util.List;
 
 public class ModuleManager {
     public static List<Module> organizedModules = new ArrayList<>();
-    public static DynamicManager dynamicManager;
     public static AntiBot antiBot;
     public static HUD hud;
     public static Notifications notifications;
@@ -38,8 +37,6 @@ public class ModuleManager {
     public void register() {
 
         // client
-        this.addModule(dynamicManager = new DynamicManager());
-
         this.addModule(new Gui());
         this.addModule(new Settings());
         this.addModule(notifications = new Notifications());
