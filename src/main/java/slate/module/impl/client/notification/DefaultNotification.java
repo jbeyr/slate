@@ -17,7 +17,7 @@ public class DefaultNotification extends SubMode<Notifications> implements INoti
 
     public DefaultNotification(String name, @NotNull Notifications parent) {
         super(name, parent);
-        this.registerSetting(font = new ModeSetting("Font", new String[]{"Minecraft", "Regular", "Product Sans", "Tenacity"}, 1));
+        this.registerSetting(font = new ModeSetting("Font", new String[]{"Minecraft", "Regular", "Product Sans", "Tenacity"}, 0));
     }
 
     private IFont getFont() {

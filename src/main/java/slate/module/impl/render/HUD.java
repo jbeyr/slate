@@ -37,11 +37,8 @@ public class HUD extends Module {
     private static final ButtonSetting world = new ButtonSetting("World", true);
     private static final ButtonSetting render = new ButtonSetting("Render", true);
     private static final ButtonSetting minigames = new ButtonSetting("Minigames", true);
-    private static final ButtonSetting fun = new ButtonSetting("Fun", true);
     private static final ButtonSetting other = new ButtonSetting("Other", true);
     private static final ButtonSetting client = new ButtonSetting("Client", true);
-    private static final ButtonSetting scripts = new ButtonSetting("Scripts", true);
-    private static final ButtonSetting exploit = new ButtonSetting("Exploit", true);
     private static final ButtonSetting experimental = new ButtonSetting("Experimental", true);
     public static ModeSetting theme;
     public static ModeSetting font;
@@ -76,7 +73,7 @@ public class HUD extends Module {
         this.registerSetting(showInfo = new ButtonSetting("Show module info", true));
 
         this.registerSetting(new DescriptionSetting("Categories"));
-        this.registerSetting(combat, movement, player, world, render, minigames, fun, other, client, scripts, exploit, experimental);
+        this.registerSetting(combat, movement, player, world, render, minigames, other, client, experimental);
     }
 
     public static double getLongestModule(IFont fr) {

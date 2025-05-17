@@ -8,9 +8,7 @@ import slate.clickgui.components.impl.CategoryComponent;
 import slate.clickgui.components.impl.ModuleComponent;
 import slate.module.Module;
 import slate.module.ModuleManager;
-// import slate.module.impl.client.CommandLine;
 import slate.module.impl.client.Gui;
-// import slate.utility.Commands;
 import slate.utility.Timer;
 import slate.utility.Utils;
 import slate.utility.font.FontManager;
@@ -96,7 +94,6 @@ public class ClickGui extends GuiScreen {
         this.sr = new ScaledResolution(this.mc);
         (this.c = new GuiTextField(1, this.mc.fontRendererObj, 22, this.height - 100, 150, 20)).setMaxStringLength(256);
         this.buttonList.add(this.s = new GuiButtonExt(2, 22, this.height - 70, 150, 20, "Send"));
-        // this.s.visible = CommandLine.a;
     }
 
     public void drawScreen(int x, int y, float p) {
@@ -125,12 +122,12 @@ public class ClickGui extends GuiScreen {
             int h = this.height / 4;
             int wd = this.width / 2;
             int w_c = 30 - this.aT.getValueInt(0, 30, 3);
-            getFont().drawCenteredString("r", wd + 1 - w_c, h - 25, Utils.getChroma(2L, 1500L));
-            getFont().drawCenteredString("a", wd - w_c, h - 15, Utils.getChroma(2L, 1200L));
-            getFont().drawCenteredString("v", wd - w_c, h - 5, Utils.getChroma(2L, 900L));
-            getFont().drawCenteredString("e", wd - w_c, h + 5, Utils.getChroma(2L, 600L));
-            getFont().drawCenteredString("n", wd - w_c, h + 15, Utils.getChroma(2L, 300L));
-            getFont().drawCenteredString("XD", wd + 1 + w_c, h + 30, Utils.getChroma(2L, 0L));
+            getFont().drawCenteredString("s", wd + 1 - w_c, h - 25, Utils.getChroma(2L, 1500L));
+            getFont().drawCenteredString("l", wd - w_c, h - 15, Utils.getChroma(2L, 1200L));
+            getFont().drawCenteredString("a", wd - w_c, h - 5, Utils.getChroma(2L, 900L));
+            getFont().drawCenteredString("t", wd - w_c, h + 5, Utils.getChroma(2L, 600L));
+            getFont().drawCenteredString("e", wd - w_c, h + 15, Utils.getChroma(2L, 300L));
+            // getFont().drawCenteredString("XD", wd + 1 + w_c, h + 30, Utils.getChroma(2L, 0L));
             this.drawVerticalLine(wd - 10 - w_c, h - 30, h + 43, Color.white.getRGB());
             this.drawVerticalLine(wd + 10 + w_c, h - 30, h + 43, Color.white.getRGB());
             if (this.aL != null) {
@@ -154,36 +151,6 @@ public class ClickGui extends GuiScreen {
         if (!Gui.removePlayerModel.isToggled()) {
             GuiInventory.drawEntityOnScreen(this.width + 15 - this.aE.getValueInt(0, 40, 2), this.height - 10, 40, (float) (this.width - 25 - x), (float) (this.height - 50 - y), this.mc.thePlayer);
         }
-
-
-        // if (CommandLine.a) {
-        //     if (!this.s.visible) {
-        //         this.s.visible = true;
-        //     }
-        //
-        //     r = CommandLine.animate.isToggled() ? CommandLine.an.getValueInt(0, 200, 2) : 200;
-        //     if (CommandLine.b) {
-        //         r = 200 - r;
-        //         if (r == 0) {
-        //             CommandLine.b = false;
-        //             CommandLine.a = false;
-        //             this.s.visible = false;
-        //         }
-        //     }
-        //
-        //     drawRect(0, 0, r, this.height, -1089466352);
-        //     this.drawHorizontalLine(0, r - 1, this.height - 345, -1);
-        //     this.drawHorizontalLine(0, r - 1, this.height - 115, -1);
-        //     drawRect(r - 1, 0, r, this.height, -1);
-        //     // Commands.rc(getFont(), this.height, r, this.sr.getScaleFactor());
-        //     int x2 = r - 178;
-        //     this.c.xPosition = x2;
-        //     this.s.xPosition = x2;
-        //     this.c.drawTextBox();
-        //     super.drawScreen(x, y, p);
-        // } else if (CommandLine.b) {
-        //     CommandLine.b = false;
-        // }
 
         if (delayedAction != null)
             delayedAction.run();
@@ -221,11 +188,6 @@ public class ClickGui extends GuiScreen {
             do {
                 do {
                     if (!var4.hasNext()) {
-                        // if (CommandLine.a) {
-                        //     this.c.mouseClicked(x, y, m);
-                        //     super.mouseClicked(x, y, m);
-                        // }
-
                         if (category != null) {
                             clickHistory.remove(category.categoryName);
                             clickHistory.add(category.categoryName);
@@ -281,15 +243,6 @@ public class ClickGui extends GuiScreen {
                     }
                 }
             }
-            // if (CommandLine.a) {
-            //     String cm = this.c.getText();
-            //     if (k == 28 && !cm.isEmpty()) {
-            //         // Commands.rCMD(this.c.getText());
-            //         this.c.setText("");
-            //         return;
-            //     }
-            //     this.c.textboxKeyTyped(t, k);
-            // }
         }
     }
 
