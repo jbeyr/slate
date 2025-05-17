@@ -18,6 +18,7 @@
     "client.MixinMouseHelper",
     "entity.EntityPlayerSPAccessor",
     "entity.MixinPlayerControllerMP",
+    "render.MixinEntityRenderer",
     "render.RenderManagerAccessor"
   ]
 }

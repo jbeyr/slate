@@ -33,6 +33,8 @@ public class ModuleManager {
     public static BedESP bedEsp;
     public static SharkESP sharkESP;
     public static InvisESP invisESP;
+    public static NoHurtCam noHurtCam;
+    public static NoCameraClip noCameraClip;
 
     public static AntiBot antiBot;
     public static TargetManager targetManager;
@@ -83,6 +85,8 @@ public class ModuleManager {
         this.addModule(bedEsp = new BedESP());
         this.addModule(sharkESP = new SharkESP());
         this.addModule(invisESP = new InvisESP());
+        this.addModule(noHurtCam = new NoHurtCam());
+        this.addModule(noCameraClip = new NoCameraClip());
 
         // world
         this.addModule(antiBot = new AntiBot());
