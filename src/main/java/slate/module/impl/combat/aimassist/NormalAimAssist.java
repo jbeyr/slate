@@ -35,11 +35,11 @@ public class NormalAimAssist extends SubMode<AimAssist> {
     private final ButtonSetting clickAim = new ButtonSetting("Click Aim", false);
     private final SliderSetting samples = new SliderSetting("Samples", 3, 3, 20, 1);
 
-    // For smoothing/accumulation
+    // for smoothing/accumulation
     private float accumulatedMouseDX = 0.0f;
     private float accumulatedMouseDY = 0.0f;
 
-    // Deltas to be applied by the Mixin this frame
+    // deltas to be applied by the Mixin this frame
     @Getter
     private int assistDX_toApplyThisFrame = 0;
     @Getter
@@ -232,7 +232,7 @@ public class NormalAimAssist extends SubMode<AimAssist> {
         double dz = viableAimPoint.zCoord - playerEyePos.zCoord;
 
         double distanceHorizontal = MathHelper.sqrt_double(dx * dx + dz * dz);
-        if (distanceHorizontal < 0.001) return true; // Essentially on top of the point, so within FOV
+        if (distanceHorizontal < 0.001) return true; // effectively on top of us, so within fov
 
         float requiredYaw = (float) (MathHelper.atan2(dz, dx) * 180.0D / Math.PI) - 90.0F;
         float requiredPitch = (float) -(MathHelper.atan2(dy, distanceHorizontal) * 180.0D / Math.PI);
@@ -240,7 +240,7 @@ public class NormalAimAssist extends SubMode<AimAssist> {
         float yawDiff = Math.abs(MathHelper.wrapAngleTo180_float(requiredYaw - playerViewYaw));
         float pitchDiff = Math.abs(requiredPitch - playerViewPitch);
 
-        return (yawDiff + pitchDiff) <= fovVal / 2.0F; // Using sum for diamond shape, common interpretation
+        return (yawDiff + pitchDiff) <= fovVal / 2.0F; // use sum for diamond shape (common interpretation)
     }
 
 
