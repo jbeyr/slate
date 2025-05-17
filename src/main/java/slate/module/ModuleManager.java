@@ -3,6 +3,9 @@ package slate.module;
 import slate.module.impl.client.*;
 import slate.module.impl.combat.AimAssist;
 import slate.module.impl.combat.AutoClicker;
+import slate.module.impl.combat.BlockHit;
+import slate.module.impl.movement.Sprint;
+import slate.module.impl.other.ModSpoofer;
 import slate.module.impl.player.AutoTool;
 import slate.module.impl.player.AutoWeapon;
 import slate.module.impl.render.*;
@@ -23,6 +26,11 @@ public class ModuleManager {
 
     public static ClientTheme clientTheme;
     public static Watermark watermark;
+    public static Tracers tracers;
+    public static Fullbright fullbright;
+    public static BedESP bedEsp;
+    public static SharkESP sharkESP;
+    public static InvisESP invisESP;
 
     public static AntiBot antiBot;
     public static TargetManager targetManager;
@@ -32,6 +40,11 @@ public class ModuleManager {
 
     public static AutoClicker autoClicker;
     public static AimAssist aimAssist;
+    public static BlockHit blockHit;
+
+    public static Sprint sprint;
+
+    public static ModSpoofer modSpoofer;
 
 
     static List<Module> modules = new ArrayList<>();
@@ -61,6 +74,11 @@ public class ModuleManager {
         // render
         this.addModule(watermark = new Watermark());
         this.addModule(clientTheme = new ClientTheme());
+        this.addModule(tracers = new Tracers());
+        this.addModule(fullbright = new Fullbright());
+        this.addModule(bedEsp = new BedESP());
+        this.addModule(sharkESP = new SharkESP());
+        this.addModule(invisESP = new InvisESP());
 
         // world
         this.addModule(antiBot = new AntiBot());
@@ -74,6 +92,13 @@ public class ModuleManager {
         // combat
         this.addModule(aimAssist = new AimAssist());
         this.addModule(autoClicker = new AutoClicker());
+        this.addModule(blockHit = new BlockHit());
+
+        // movement
+        this.addModule(sprint = new Sprint());
+
+        // other
+        this.addModule(modSpoofer = new ModSpoofer());
 
         // enable
         antiBot.enable();

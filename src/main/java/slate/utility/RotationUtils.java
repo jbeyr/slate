@@ -1,17 +1,14 @@
 package slate.utility;
 
 import com.google.common.base.Predicates;
-import slate.event.PreMotionEvent;
 // import slate.module.impl.other.RotationHandler;
 // import slate.module.impl.other.anticheats.utils.world.PlayerRotation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.*;
-import org.apache.commons.lang3.tuple.Triple;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import slate.module.setting.utils.slant.Interpolate;
 
 import java.util.*;
 

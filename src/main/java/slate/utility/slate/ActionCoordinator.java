@@ -1,4 +1,4 @@
-package slate.utility;
+package slate.utility.slate;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.MovingObjectPosition;
@@ -22,5 +22,10 @@ public class ActionCoordinator {
     public static boolean isSneakingAllowed() {
         return isActingOnPlayerBehalfAllowed();
     }
+
+    public static boolean isSprintingAllowed() {
+        return isActingOnPlayerBehalfAllowed();
+    }
+
 
 }

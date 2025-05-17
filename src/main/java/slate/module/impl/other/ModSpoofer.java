@@ -1,0 +1,40 @@
+package slate.module.impl.other;
+
+import slate.module.Module;
+import slate.module.setting.impl.ButtonSetting;
+import slate.module.setting.impl.DescriptionSetting;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.ModContainer;
+
+import java.util.HashSet;
+import java.util.Set;
+
+public class ModSpoofer extends Module {
+    public static final ButtonSetting cancel = new ButtonSetting("Cancel", true);
+    public static final Set<String> filteredMod = new HashSet<>();
+    private final Set<ButtonSetting> mods = new HashSet<>();
+
+    public ModSpoofer() {
+        super("ModSpoofer", category.other);
+        this.registerSetting(cancel, new DescriptionSetting("Active mods:", () -> !cancel.isToggled()));
+        for (ModContainer modContainer : Loader.instance().getActiveModList()) {
+            ButtonSetting setting = new ButtonSetting(modContainer.getModId(), true, () -> !cancel.isToggled());
+            this.registerSetting(setting);
+            mods.add(setting);
+        }
+    }
+
+    @Override
+    public void guiUpdate() {
+        for (ButtonSetting mod : mods) {
+            if (!mod.isToggled()) {
+                filteredMod.add(mod.getName());
+            }
+        }
+    }
+
+    @Override
+    public void onDisable() {
+        filteredMod.clear();
+    }
+}

@@ -112,11 +112,8 @@ public class HUD extends Module {
         if (module.moduleCategory() == category.world && !world.isToggled()) return true;
         if (module.moduleCategory() == category.render && !render.isToggled()) return true;
         if (module.moduleCategory() == category.minigames && !minigames.isToggled()) return true;
-        if (module.moduleCategory() == category.fun && !fun.isToggled()) return true;
         if (module.moduleCategory() == category.other && !other.isToggled()) return true;
         if (module.moduleCategory() == category.client && !client.isToggled()) return true;
-        if (module.moduleCategory() == category.scripts && !scripts.isToggled()) return true;
-        if (module.moduleCategory() == category.exploit && !exploit.isToggled()) return true;
         if (module.moduleCategory() == category.experimental && !experimental.isToggled()) return true;
 
         if (module.isHidden()) {

@@ -10,7 +10,6 @@ public class CoolDown {
 
     public void start(){
         this.start = System.currentTimeMillis();
-        //Utils.Player.sendMessageToSelf("Time started " + lasts/1000);
     }
 
     public boolean hasFinished(){
@@ -22,7 +21,6 @@ public class CoolDown {
     }
 
     public void setCooldown(long time){
-        //Utils.Player.sendMessageToSelf("Set cooldown to " + time);
         this.lasts = time;
     }
 

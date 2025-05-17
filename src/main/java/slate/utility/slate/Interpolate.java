@@ -1,6 +1,5 @@
-package slate.module.setting.utils.slant;
+package slate.utility.slate;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;

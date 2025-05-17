@@ -10,15 +10,14 @@ import net.minecraft.util.Vec3;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.jetbrains.annotations.NotNull;
-import slate.module.Module;
 import slate.module.ModuleManager;
 import slate.module.impl.combat.AimAssist;
 import slate.module.impl.world.targeting.TargetManager;
 import slate.module.setting.impl.ButtonSetting;
 import slate.module.setting.impl.SliderSetting;
 import slate.module.setting.impl.SubMode;
-import slate.module.setting.utils.slant.Interpolate;
-import slate.module.setting.utils.slant.RayUtils;
+import slate.utility.slate.Interpolate;
+import slate.utility.slate.RayUtils;
 import slate.utility.Utils;
 
 import java.util.Optional;

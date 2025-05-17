@@ -17,7 +17,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Mouse;
-import slate.utility.ActionCoordinator;
+import slate.utility.slate.ActionCoordinator;
 import slate.utility.Utils;
 
 import java.util.Optional;

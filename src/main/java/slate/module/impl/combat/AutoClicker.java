@@ -24,9 +24,9 @@ public class AutoClicker extends IAutoClicker {
     public AutoClicker() {
         super("AutoClicker", category.combat);
         this.registerSetting(mode = new ModeValue("Mode", this)
-                .add(new NormalAutoClicker("Normal", this, true, false))
                 .add(new SlantLeftAutoClicker("Slant", this))
-                .setDefaultValue("Normal")
+                .add(new RavenXdAutoClicker("Raven XD", this, true, false))
+                .build()
         );
         this.registerSetting(breakBlocks = new ButtonSetting("Break blocks", true));
         this.registerSetting(inventoryFill = new ButtonSetting("Inventory fill", false));

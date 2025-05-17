@@ -241,12 +241,9 @@ public class Module {
         world,
         render,
         minigames,
-        fun,
         other,
         client,
         profiles,
-        scripts,
-        exploit,
         experimental
     }
 }

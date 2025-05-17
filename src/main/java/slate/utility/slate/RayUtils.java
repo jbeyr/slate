@@ -1,4 +1,4 @@
-package slate.module.setting.utils.slant;
+package slate.utility.slate;
 
 import org.jetbrains.annotations.NotNull;
 import net.minecraft.client.Minecraft;

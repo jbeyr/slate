@@ -10,7 +10,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Mouse;
 
-public class NormalAutoClicker extends SubMode<IAutoClicker> {
+public class RavenXdAutoClicker extends SubMode<IAutoClicker> {
     private final SliderSetting minCPS;
     private final SliderSetting maxCPS;
     private final ButtonSetting butterFly;
@@ -22,7 +22,7 @@ public class NormalAutoClicker extends SubMode<IAutoClicker> {
     private int ticksDown;
     private long nextSwing;
 
-    public NormalAutoClicker(String name, @NotNull IAutoClicker parent, boolean left, boolean always) {
+    public RavenXdAutoClicker(String name, @NotNull IAutoClicker parent, boolean left, boolean always) {
         super(name, parent);
         this.leftClick = left;
         this.rightClick = !left;

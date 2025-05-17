@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import slate.module.ModuleManager;
 import slate.module.impl.player.AutoWeapon;
-import slate.utility.ActionCoordinator;
+import slate.utility.slate.ActionCoordinator;
 
 @Mixin(EntityPlayer.class)
 public class MixinEntityPlayer {

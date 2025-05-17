@@ -16,6 +16,7 @@ import net.minecraftforge.client.event.MouseEvent;
 import slate.module.Module;
 import slate.module.ModuleManager;
 import slate.module.impl.client.Settings;
+import slate.module.impl.other.SlotHandler;
 import slate.module.setting.impl.SliderSetting;
 import slate.utility.clicks.CPSCalculator;
 import net.minecraft.block.Block;
@@ -921,14 +922,14 @@ public class Utils {
     //     return BlockUtils.replaceable(playerPos) || BlockUtils.isFluid(BlockUtils.getBlock(playerPos));
     // }
 
-    // public static boolean holdingWeapon() {
-    //     ItemStack item = SlotHandler.getHeldItem();
-    //     if (item == null) {
-    //         return false;
-    //     }
-    //     Item getItem = item.getItem();
-    //     return (!Settings.weaponSword.isToggled() || getItem instanceof ItemSword) || (Settings.weaponAxe.isToggled() && getItem instanceof ItemAxe) || (Settings.weaponRod.isToggled() && getItem instanceof ItemFishingRod) || (Settings.weaponStick.isToggled() && getItem == Items.stick);
-    // }
+    public static boolean holdingWeapon() {
+        ItemStack item = SlotHandler.getHeldItem();
+        if (item == null) {
+            return false;
+        }
+        Item getItem = item.getItem();
+        return (!Settings.weaponSword.isToggled() || getItem instanceof ItemSword) || (Settings.weaponAxe.isToggled() && getItem instanceof ItemAxe) || (Settings.weaponRod.isToggled() && getItem instanceof ItemFishingRod) || (Settings.weaponStick.isToggled() && getItem == Items.stick);
+    }
 
     // public static boolean holdingSword() {
     //     if (SlotHandler.getHeldItem() == null) {

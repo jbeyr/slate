@@ -8,7 +8,8 @@
     "entity.EntityLivingBaseAccessor",
     "entity.EntityPlayerAccessor",
     "entity.MixinEntityLivingBase",
-    "entity.MixinEntityPlayer"
+    "entity.MixinEntityPlayer",
+    "network.MixinModList"
   ],
   "client": [
     "client.GuiScreenAccessor",
