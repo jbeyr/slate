@@ -32,12 +32,10 @@ public class RayUtils {
         Vec3 optimalPoint = new Vec3(nx, ny, nz);
 
         if (hasDirectLineOfSight(intEyePosMe, optimalPoint)) {
-            System.out.println("direct los to optimal point");
             return Optional.of(optimalPoint);
         }
 
         // since we don't have direct line of sight to the optimal point, we choose a sampled point
-        System.out.println("no direct los to optimal point; sampling instead");
         return rayTraceNearestVisiblePoint(target, partialTicks, samples);
     }
 

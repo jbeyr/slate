@@ -1,7 +1,5 @@
 package slate.module.impl.world.targeting;
 
-import lombok.Getter;
-import lombok.Setter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityCreature;

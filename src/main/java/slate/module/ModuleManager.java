@@ -2,9 +2,12 @@ package slate.module;
 
 import slate.module.impl.client.*;
 import slate.module.impl.combat.AimAssist;
+import slate.module.impl.combat.AutoClicker;
+import slate.module.impl.player.AutoTool;
 import slate.module.impl.player.AutoWeapon;
 import slate.module.impl.render.*;
 import org.jetbrains.annotations.NotNull;
+import slate.module.impl.world.DelayRemover;
 import slate.module.impl.world.targeting.AntiBot;
 import slate.module.impl.world.targeting.TargetManager;
 
@@ -14,15 +17,22 @@ import java.util.List;
 
 public class ModuleManager {
     public static List<Module> organizedModules = new ArrayList<>();
-    public static AntiBot antiBot;
-    public static HUD hud;
+
     public static Notifications notifications;
+    public static HUD hud;
+
     public static ClientTheme clientTheme;
     public static Watermark watermark;
-    public static AimAssist aimAssist;
-    public static AutoWeapon autoWeapon;
 
+    public static AntiBot antiBot;
     public static TargetManager targetManager;
+    public static DelayRemover delayRemover;
+    public static AutoWeapon autoWeapon;
+    public static AutoTool autoTool;
+
+    public static AutoClicker autoClicker;
+    public static AimAssist aimAssist;
+
 
     static List<Module> modules = new ArrayList<>();
 
@@ -57,10 +67,13 @@ public class ModuleManager {
         this.addModule(targetManager = new TargetManager());
 
         // player
+        this.addModule(delayRemover = new DelayRemover());
         this.addModule(autoWeapon = new AutoWeapon());
+        this.addModule(autoTool = new AutoTool());
 
         // combat
         this.addModule(aimAssist = new AimAssist());
+        this.addModule(autoClicker = new AutoClicker());
 
         // enable
         antiBot.enable();

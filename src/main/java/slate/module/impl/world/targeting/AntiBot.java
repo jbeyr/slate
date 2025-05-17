@@ -93,9 +93,11 @@ public class AntiBot extends Module {
             return true;
         }
         if (!getTablist().contains(entityPlayer.getName()) && tablist.isToggled()) {
+            System.out.println("y!");
             return true;
         }
         if (entityPlayer.getHealth() != 20.0f && entityPlayer.getName().startsWith("§c")) {
+            System.out.println("z!");
             return true;
         }
         if (pitSpawn.isToggled() && entityPlayer.posY >= 114 && entityPlayer.posY <= 130 && entityPlayer.getDistance(0, 114, 0) <= 25) {
@@ -110,15 +112,19 @@ public class AntiBot extends Module {
             if (entityPlayer.getHealth() == 20.0f) {
                 String unformattedText = entityPlayer.getDisplayName().getUnformattedText();
                 if (unformattedText.length() == 10 && unformattedText.charAt(0) != '§') {
+                    System.out.println("a!");
                     return true;
                 }
                 if (unformattedText.length() == 12 && entityPlayer.isPlayerSleeping() && unformattedText.charAt(0) == '§') {
+                    System.out.println("b!");
                     return true;
                 }
                 if (unformattedText.length() >= 7 && unformattedText.charAt(2) == '[' && unformattedText.charAt(3) == 'N' && unformattedText.charAt(6) == ']') {
+                    System.out.println("c!");
                     return true;
                 }
                 if (entityPlayer.getName().contains(" ")) {
+                    System.out.println("d!");
                     return true;
                 }
             } else if (entityPlayer.isInvisible()) {
@@ -126,7 +132,7 @@ public class AntiBot extends Module {
                 return unformattedText.length() >= 3 && unformattedText.charAt(0) == '§' && unformattedText.charAt(1) == 'c';
             }
         }
-        return true;
+        return false;
     }
 
     private static @NotNull List<String> getTablist() {

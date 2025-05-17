@@ -188,7 +188,7 @@ public class NormalAimAssist extends SubMode<AimAssist> {
                 .map(e -> (EntityLivingBase) e)
                 .filter(entity -> {
                     double dSq = Interpolate.interpolatedDistanceSqToEntity(mc.thePlayer, entity, partialTicks);
-                    return dSq <= maxRangeSq && dSq >= minRangeSq && tm.isRecommendedTarget(entity);
+                    return minRangeSq <= dSq && dSq <= maxRangeSq && tm.isRecommendedTarget(entity);
                 })
                 .map(entity -> viableAimPointForEntity(entity, partialTicks))
                 .flatMap(opt -> opt.map(Stream::of).orElseGet(Stream::empty))

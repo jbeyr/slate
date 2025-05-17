@@ -6,13 +6,17 @@
   "mixins": [
     "entity.EntityAccessor",
     "entity.EntityLivingBaseAccessor",
-    "entity.EntityPlayerAccessor"
+    "entity.EntityPlayerAccessor",
+    "entity.MixinEntityLivingBase",
+    "entity.MixinEntityPlayer"
   ],
   "client": [
     "client.GuiScreenAccessor",
     "client.MinecraftAccessor",
+    "client.MixinMinecraft",
     "client.MixinMouseHelper",
     "entity.EntityPlayerSPAccessor",
+    "entity.MixinPlayerControllerMP",
     "render.RenderManagerAccessor"
   ]
 }
