@@ -1,8 +1,8 @@
 package slate.utility.aim;
 
 import akka.japi.Pair;
-import slate.module.impl.other.anticheats.utils.phys.Vec2;
-import slate.module.impl.other.anticheats.utils.world.PlayerRotation;
+import slate.utility.anticheats.utils.phys.Vec2;
+import slate.utility.anticheats.utils.world.PlayerRotation;
 import net.minecraft.util.Vec3;
 import slate.utility.MoveUtil;
 import slate.utility.RotationUtils;

@@ -16,7 +16,6 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.config.GuiButtonExt;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -148,7 +147,7 @@ public class HUD extends Module {
 
     @SubscribeEvent
     public void onRenderTick(@NotNull RenderTickEvent ev) {
-        if (ev.phase != TickEvent.Phase.END || !Utils.nullCheck()) {
+        if (ev.phase != TickEvent.Phase.END || !Utils.nullCheckPasses()) {
             return;
         }
         if (isAlphabeticalSort != alphabeticalSort.isToggled()) {

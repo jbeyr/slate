@@ -14,14 +14,11 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.Timer;
 import net.minecraftforge.client.event.MouseEvent;
 import slate.module.Module;
-import slate.module.ModuleManager;
 import slate.module.impl.client.Settings;
 import slate.module.impl.other.SlotHandler;
 import slate.module.setting.impl.SliderSetting;
-import slate.utility.clicks.CPSCalculator;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockAir;
-import net.minecraft.block.BlockSign;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.inventory.GuiInventory;
@@ -36,7 +33,6 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.ContainerPlayer;
 import net.minecraft.item.*;
-import net.minecraft.network.play.client.C0APacketAnimation;
 import net.minecraft.potion.Potion;
 import net.minecraft.scoreboard.*;
 import net.minecraft.util.*;
@@ -189,7 +185,7 @@ public class Utils {
     private static final Queue<String> delayedMessage = new ConcurrentLinkedQueue<>();
 
     public static void sendMessage(String txt) {
-        if (nullCheck()) {
+        if (nullCheckPasses()) {
             String m = formatColor("&7[&dR&7]&r " + replace(txt));
             mc.thePlayer.addChatMessage(new ChatComponentText(m));
         }
@@ -209,7 +205,7 @@ public class Utils {
     }
 
     public static void sendMessageAnyWay(String txt) {
-        if (nullCheck()) {
+        if (nullCheckPasses()) {
             sendMessage(txt);
         } else {
             delayedMessage.add(txt);
@@ -218,7 +214,7 @@ public class Utils {
 
     static {
         Main.getExecutor().scheduleWithFixedDelay(() -> {
-            if (Utils.nullCheck() && !delayedMessage.isEmpty()) {
+            if (Utils.nullCheckPasses() && !delayedMessage.isEmpty()) {
                 for (String s : delayedMessage) {
                     sendMessage(s);
                 }
@@ -228,7 +224,7 @@ public class Utils {
     }
 
     public static void sendDebugMessage(String message) {
-        if (nullCheck()) {
+        if (nullCheckPasses()) {
             mc.thePlayer.addChatMessage(new ChatComponentText("§7[§dR§7]§r " + message));
         }
     }
@@ -250,7 +246,7 @@ public class Utils {
     // }
 
     public static void sendRawMessage(String txt) {
-        if (nullCheck()) {
+        if (nullCheckPasses()) {
             mc.thePlayer.addChatMessage(new ChatComponentText(formatColor(txt)));
         }
     }
@@ -384,7 +380,7 @@ public class Utils {
         return a.getInput() == b.getInput() ? a.getInput() : a.getInput() + r.nextDouble() * (b.getInput() - a.getInput());
     }
 
-    public static boolean nullCheck() {
+    public static boolean nullCheckPasses() {
         return mc.thePlayer != null && mc.theWorld != null;
     }
 
@@ -492,14 +488,14 @@ public class Utils {
     }
 
     public static boolean inInventory() {
-        if (!Utils.nullCheck()) {
+        if (!Utils.nullCheckPasses()) {
             return false;
         }
         return (mc.currentScreen != null) && (mc.thePlayer.inventoryContainer != null) && (mc.thePlayer.inventoryContainer instanceof ContainerPlayer) && (mc.currentScreen instanceof GuiInventory);
     }
 
     public static boolean isSkyWars() {
-        if (!Utils.nullCheck()) {
+        if (!Utils.nullCheckPasses()) {
             return false;
         }
         final Scoreboard scoreboard = mc.theWorld.getScoreboard();
@@ -516,7 +512,7 @@ public class Utils {
     }
 
     public static int getBedwarsStatus() {
-        if (!Utils.nullCheck()) {
+        if (!Utils.nullCheckPasses()) {
             return -1;
         }
         final Scoreboard scoreboard = mc.theWorld.getScoreboard();
@@ -600,7 +596,7 @@ public class Utils {
     }
 
     public static boolean isMoving() {
-        if (!Utils.nullCheck()) return false;
+        if (!Utils.nullCheckPasses()) return false;
         return mc.thePlayer.moveForward != 0.0F || mc.thePlayer.moveStrafing != 0.0F;
     }
 
@@ -913,7 +909,7 @@ public class Utils {
     }
 
     public static boolean overAir() {
-        if (!Utils.nullCheck()) return false;
+        if (!Utils.nullCheckPasses()) return false;
         return mc.theWorld.isAirBlock(new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1.0, mc.thePlayer.posZ));
     }
 

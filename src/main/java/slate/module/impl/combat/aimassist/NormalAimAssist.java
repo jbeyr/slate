@@ -23,6 +23,7 @@ import slate.utility.Utils;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+// fixme after reaching desired position for a target it oscillates within 0.1 yaw and pitch values (ex: 35.2, 35.3, and back, and so on)
 public class NormalAimAssist extends SubMode<AimAssist> {
 
     private float maxRangeSq;

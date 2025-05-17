@@ -74,7 +74,7 @@ public class TargetHUD extends Module {
 
     @Override
     public void onUpdate() {
-        if (!Utils.nullCheck()) {
+        if (!Utils.nullCheckPasses()) {
             target = null;
             return;
         }

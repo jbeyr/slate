@@ -3,9 +3,11 @@ package slate.module;
 import slate.module.impl.client.*;
 import slate.module.impl.combat.AimAssist;
 import slate.module.impl.combat.AutoClicker;
+import slate.module.impl.combat.Backtrack;
 import slate.module.impl.combat.BlockHit;
 import slate.module.impl.movement.Sprint;
 import slate.module.impl.other.ModSpoofer;
+import slate.module.impl.other.PingSpoofer;
 import slate.module.impl.player.AutoTool;
 import slate.module.impl.player.AutoWeapon;
 import slate.module.impl.render.*;
@@ -41,10 +43,12 @@ public class ModuleManager {
     public static AutoClicker autoClicker;
     public static AimAssist aimAssist;
     public static BlockHit blockHit;
+    public static Backtrack backtrack;
 
     public static Sprint sprint;
 
     public static ModSpoofer modSpoofer;
+    public static PingSpoofer pingSpoofer;
 
 
     static List<Module> modules = new ArrayList<>();
@@ -93,12 +97,14 @@ public class ModuleManager {
         this.addModule(aimAssist = new AimAssist());
         this.addModule(autoClicker = new AutoClicker());
         this.addModule(blockHit = new BlockHit());
+        this.addModule(backtrack = new Backtrack());
 
         // movement
         this.addModule(sprint = new Sprint());
 
         // other
         this.addModule(modSpoofer = new ModSpoofer());
+        this.addModule(pingSpoofer = new PingSpoofer());
 
         // enable
         antiBot.enable();

@@ -1,4 +1,4 @@
-package slate.module.impl.other.anticheats.utils.phys;
+package slate.utility.anticheats.utils.phys;
 
 import slate.utility.aim.AimSimulator;
 import net.minecraft.util.MathHelper;

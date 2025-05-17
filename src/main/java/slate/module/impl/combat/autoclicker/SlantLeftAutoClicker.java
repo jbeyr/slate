@@ -42,7 +42,7 @@ public class SlantLeftAutoClicker extends SubMode<IAutoClicker> {
     private long clickDelay = 0;
 
     public Optional<Entity> entityOnCrosshair() {
-        if(!Utils.nullCheck()) return Optional.empty();
+        if(!Utils.nullCheckPasses()) return Optional.empty();
 
         TargetManager tm = ModuleManager.targetManager;
         MovingObjectPosition objectMouseOver = mc.objectMouseOver;

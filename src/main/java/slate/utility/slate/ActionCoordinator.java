@@ -6,7 +6,7 @@ import net.minecraft.util.MovingObjectPosition;
 public class ActionCoordinator {
     public static boolean isActingOnPlayerBehalfAllowed() {
         Minecraft mc = Minecraft.getMinecraft();
-        return mc.thePlayer != null && mc.thePlayer.isEntityAlive() && mc.currentScreen == null && mc.inGameHasFocus;
+        return mc.thePlayer != null && mc.theWorld != null && mc.thePlayer.isEntityAlive() && mc.currentScreen == null && mc.inGameHasFocus;
     }
 
     public static boolean isClickAllowed() {

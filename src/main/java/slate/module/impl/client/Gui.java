@@ -30,7 +30,7 @@ public class Gui extends Module {
     }
 
     public void onEnable() {
-        if (Utils.nullCheck() && mc.currentScreen != Main.clickGui) {
+        if (Utils.nullCheckPasses() && mc.currentScreen != Main.clickGui) {
             mc.displayGuiScreen(Main.clickGui);
             Main.clickGui.initMain();
         }

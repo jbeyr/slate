@@ -7,7 +7,6 @@ import slate.mixins.impl.entity.EntityAccessor;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.potion.Potion;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -285,7 +284,7 @@ public class MoveUtil {
      * @return modified motion
      */
     public static double jumpBoostMotion(final double motionY) {
-        if (!Utils.nullCheck())
+        if (!Utils.nullCheckPasses())
             return 0.42f;
 
         if (mc.thePlayer.isPotionActive(Potion.jump)) {

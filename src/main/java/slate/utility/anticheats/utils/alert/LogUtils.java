@@ -1,4 +1,4 @@
-package slate.module.impl.other.anticheats.utils.alert;
+package slate.utility.anticheats.utils.alert;
 
 import slate.Main;
 // import slate.module.impl.other.Anticheat;

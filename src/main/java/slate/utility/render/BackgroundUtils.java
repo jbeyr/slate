@@ -52,7 +52,7 @@ public class BackgroundUtils {
         }
         lastRenderTime = time;
 
-        if (!Utils.nullCheck())
+        if (!Utils.nullCheckPasses())
             RenderUtils.drawImage(lastBackground, 0, 0, width, height);
 
         if (shadow != 0) {

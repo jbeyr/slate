@@ -2,8 +2,6 @@ package slate;
 
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
-import net.minecraft.init.Blocks;
-import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -16,6 +14,7 @@ import slate.module.Module;
 import slate.module.ModuleManager;
 import slate.utility.Reflection;
 import slate.utility.Utils;
+import slate.utility.slate.PacketManager;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -44,6 +43,7 @@ public class Main
     public void init(FMLInitializationEvent ignored) {
         Runtime.getRuntime().addShutdownHook(new Thread(ex::shutdown));
         MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(new PacketManager());
         // MinecraftForge.EVENT_BUS.register(new DebugInfoRenderer());
         // MinecraftForge.EVENT_BUS.register(new CPSCalculator());
         // MinecraftForge.EVENT_BUS.register(new Ping());
@@ -69,7 +69,7 @@ public class Main
     public void onTick(@NotNull TickEvent.ClientTickEvent e) {
         if (e.phase == TickEvent.Phase.END) {
             try {
-                if (Utils.nullCheck()) {
+                if (Utils.nullCheckPasses()) {
                     if (Reflection.sendMessage) {
                         Utils.sendMessage("&cThere was an error, relaunch the game.");
                         Reflection.sendMessage = false;
@@ -93,7 +93,7 @@ public class Main
     public void onRenderTick(TickEvent.@NotNull RenderTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             try {
-                if (Utils.nullCheck()) {
+                if (Utils.nullCheckPasses()) {
                     for (Module module : getModuleManager().getModules()) {
                         if (mc.currentScreen == null && module.canBeEnabled()) {
                             module.keybind();

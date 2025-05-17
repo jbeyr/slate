@@ -1,4 +1,4 @@
-package slate.module.impl.other.anticheats.utils.world;
+package slate.utility.anticheats.utils.world;
 
 import net.minecraft.util.Vec3;
 import net.minecraft.client.entity.AbstractClientPlayer;

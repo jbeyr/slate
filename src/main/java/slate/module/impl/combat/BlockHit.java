@@ -72,7 +72,7 @@ public class BlockHit extends Module {
 
     @SubscribeEvent
     public void onTick(TickEvent.RenderTickEvent e) {
-        if (!Utils.nullCheck())
+        if (!Utils.nullCheckPasses())
             return;
 
         if (onRightMBHold.isToggled() && !Utils.tryingToCombo()) {
