@@ -1,6 +1,7 @@
 package slate.module;
 
 import slate.module.impl.client.*;
+import slate.module.impl.combat.AimAssist;
 import slate.module.impl.world.*;
 import slate.module.impl.render.*;
 import org.jetbrains.annotations.NotNull;
@@ -16,6 +17,7 @@ public class ModuleManager {
     public static Notifications notifications;
     public static ClientTheme clientTheme;
     public static Watermark watermark;
+    public static AimAssist aimAssist;
 
 
     static List<Module> modules = new ArrayList<>();
@@ -49,6 +51,9 @@ public class ModuleManager {
 
         // world
         this.addModule(antiBot = new AntiBot());
+
+        // combat
+        this.addModule(aimAssist = new AimAssist());
 
         // enable
         antiBot.enable();

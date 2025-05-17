@@ -11,6 +11,7 @@ import net.minecraft.util.*;
 import org.apache.commons.lang3.tuple.Triple;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import slate.module.setting.utils.slant.Interpolate;
 
 import java.util.*;
 
@@ -120,28 +121,6 @@ public class RotationUtils {
         return MathHelper.clamp_float(n, -90.0f, 90.0f);
     }
 
-    // public static float[] fixRotation(float n, float n2, final float n3, final float n4) {
-    //     float n5 = n - n3;
-    //     final float abs = Math.abs(n5);
-    //     final float n7 = n2 - n4;
-    //     final float n8 = mc.gameSettings.mouseSensitivity * 0.6f + 0.2f;
-    //     final double n9 = n8 * n8 * n8 * 1.2;
-    //     final float n10 = (float) (Math.round((double) n5 / n9) * n9);
-    //     final float n11 = (float) (Math.round((double) n7 / n9) * n9);
-    //     n = n3 + n10;
-    //     n2 = n4 + n11;
-    //     if (abs >= 1.0f) {
-    //         final int n12 = (int) RotationHandler.randomYawFactor.getInput();
-    //         if (n12 != 0) {
-    //             final int n13 = n12 * 100 + Utils.randomizeInt(-30, 30);
-    //             n += Utils.randomizeInt(-n13, n13) / 100.0;
-    //         }
-    //     } else if (abs <= 0.04) {
-    //         n += ((abs > 0.0f) ? 0.01 : -0.01);
-    //     }
-    //     return new float[]{n, clampTo90(n2)};
-    // }
-
     public static float angle(final double n, final double n2) {
         return (float) (Math.atan2(n - mc.thePlayer.posX, n2 - mc.thePlayer.posZ) * 57.295780181884766 * -1.0);
     }
@@ -243,22 +222,6 @@ public class RotationUtils {
         }
         return mc.thePlayer.getHorizontalFacing();
     }
-
-    // @Contract("_, _ -> new")
-    // public static @NotNull Vec3 getFarthestPoint(@NotNull AxisAlignedBB from, @NotNull Vec3 to) {
-    //     double pointX, pointY, pointZ;
-    //     if (to.x() < from.maxX) {
-    //         pointX = from.maxX;
-    //     } else pointX = Math.min(to.x(), from.minX);
-    //     if (to.y() < from.maxY) {
-    //         pointY = from.maxY;
-    //     } else pointY = Math.min(to.y(), from.minY);
-    //     if (to.z() < from.maxZ) {
-    //         pointZ = from.maxZ;
-    //     } else pointZ = Math.min(to.z(), from.minZ);
-    //
-    //     return new Vec3(pointX, pointY, pointZ);
-    // }
 
     public static float normalize(float yaw) {
         return normalize(yaw, -180, 180);

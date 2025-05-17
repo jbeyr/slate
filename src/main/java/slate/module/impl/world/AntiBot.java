@@ -125,7 +125,9 @@ public class AntiBot extends Module {
                 return unformattedText.length() >= 3 && unformattedText.charAt(0) == '§' && unformattedText.charAt(1) == 'c';
             }
         }
-        return false;
+
+        // if we don't think this is a bot, consult slant's antibot module too
+        return SlantAntiBot.isRecommendedTarget(entity);
     }
 
     private static @NotNull List<String> getTablist() {
@@ -137,7 +139,7 @@ public class AntiBot extends Module {
     }
 
     @SubscribeEvent
-    public void c(final EntityJoinWorldEvent entityJoinWorldEvent) {
+    public void onJoin(final EntityJoinWorldEvent entityJoinWorldEvent) {
         if (entitySpawnDelay.isToggled() && entityJoinWorldEvent.entity instanceof EntityPlayer && entityJoinWorldEvent.entity != mc.thePlayer) {
             entities.put((EntityPlayer) entityJoinWorldEvent.entity, System.currentTimeMillis());
         }

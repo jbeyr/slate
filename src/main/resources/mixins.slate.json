@@ -11,6 +11,7 @@
   "client": [
     "client.GuiScreenAccessor",
     "client.MinecraftAccessor",
+    "client.MixinMouseHelper",
     "entity.EntityPlayerSPAccessor",
     "render.RenderManagerAccessor"
   ]

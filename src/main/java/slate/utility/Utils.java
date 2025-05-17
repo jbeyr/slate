@@ -983,6 +983,10 @@ public class Utils {
         return getEyePos(mc.thePlayer);
     }
 
+    public static Vec3 getEyePos(float partialTicks) {
+        return mc.thePlayer.getPositionEyes(partialTicks);
+    }
+
     public static boolean isTargetNearby() {
         return isTargetNearby(6);
     }
