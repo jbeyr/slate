@@ -28,10 +28,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public class Watermark extends Module {
-    public static final String VERSION = "2.14.1";
     public static final Map<String, ResourceLocation> WATERMARK = new Object2ObjectOpenHashMap<>();
-
-    public static String customName = "CustomClient";
 
     public static int posX = 5;
     public static int posY = 5;
@@ -53,15 +50,15 @@ public class Watermark extends Module {
         this.registerSetting(mode = new ModeSetting("Mode", new String[]{"Text", "Photo"}, 0));
         final ModeOnly textMode = new ModeOnly(mode, 0);
         final ModeOnly photoMode = new ModeOnly(mode, 1);
-        this.registerSetting(watermarkText = new ModeSetting("Watermark text", new String[]{"Default", "Custom", "Sense"}, 0, textMode));
-        this.registerSetting(watermarkPhoto = new ModeSetting("Watermark photo", new String[]{"Default", "Enders"}, 0, photoMode));
+        this.registerSetting(watermarkText = new ModeSetting("Watermark text", new String[]{"Default", "Sense"}, 0, textMode));
+        this.registerSetting(watermarkPhoto = new ModeSetting("Watermark photo", new String[]{"slate"}, 0, photoMode));
         this.registerSetting(font = new ModeSetting("Font", new String[]{"Minecraft", "Product Sans"}, 0, textMode));
-        this.registerSetting(theme = new ModeSetting("Theme", Theme.themes, 0, textMode.extend(new ModeOnly(watermarkText, 2))));
+        this.registerSetting(theme = new ModeSetting("Theme", Theme.themes, 0, textMode.extend(new ModeOnly(watermarkText, 1))));
         this.registerSetting(showVersion = new ButtonSetting("Show version", true, textMode));
         this.registerSetting(lowercase = new ButtonSetting("Lowercase", false, textMode));
         this.registerSetting(shadow = new ButtonSetting("Shadow", true, textMode));
 
-        for (String s : Arrays.asList("default", "enders")) {
+        for (String s : Arrays.asList("slate")) {
             try (InputStream stream = Objects.requireNonNull(Main.class.getResourceAsStream("/assets/slate/textures/watermarks/" + s + ".png"))) {
                 BufferedImage image = ImageIO.read(stream);
                 WATERMARK.put(s, Minecraft.getMinecraft().renderEngine.getDynamicTextureLocation(s, new DynamicTexture(image)));
@@ -83,19 +80,16 @@ public class Watermark extends Module {
                 String text = "";
                 switch ((int) watermarkText.getInput()) {
                     case 0:
-                        text = "§r§f§main §6" + Main.MODID + " §7";
+                        text = "§r§f§lmain §6" + Main.MODID + " §7";
                         break;
                     case 1:
-                        text = customName;
-                        break;
-                    case 2:
                         text = "§r§f§lMain§9Sense §rFPS:" + Minecraft.getDebugFPS() + " §r";
                         break;
                 }
 
                 if (!text.isEmpty()) {
                     if (showVersion.isToggled())
-                        text += VERSION;
+                        text += Main.VERSION;
                     if (lowercase.isToggled())
                         text = text.toLowerCase();
 
@@ -120,10 +114,7 @@ public class Watermark extends Module {
             case 1:
                 switch ((int) watermarkPhoto.getInput()) {
                     case 0:
-                        RenderUtils.drawImage(WATERMARK.get("default"), posX, posY, 50, 50);
-                        break;
-                    case 1:
-                        RenderUtils.drawImage(WATERMARK.get("enders"), posX, posY, 150, 45);
+                        RenderUtils.drawImage(WATERMARK.get("slate"), posX, posY, 40, 40);
                         break;
                 }
                 break;
