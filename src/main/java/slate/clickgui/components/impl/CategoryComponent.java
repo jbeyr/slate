@@ -9,8 +9,8 @@ import slate.module.setting.impl.SubMode;
 import slate.utility.Timer;
 import slate.utility.Utils;
 import slate.utility.font.IFont;
-// import slate.utility.profile.Manager;
-// import slate.utility.profile.Profile;
+import slate.utility.profile.Manager;
+import slate.utility.profile.Profile;
 import slate.utility.render.*;
 import lombok.Getter;
 import net.minecraft.client.Minecraft;
@@ -86,38 +86,26 @@ public class CategoryComponent {
         }
     }
 
-    public void reloadModules(boolean isProfile) {
+    public void reloadModules() {
         this.modules.clear();
         this.buttonHeight = 13;
         int tY = this.buttonHeight + 3;
 
-        // if ((this.categoryName == Module.category.profiles && isProfile) || (this.categoryName == Module.category.scripts && !isProfile)) {
-        //     ModuleComponent manager = new ModuleComponent(isProfile ? new Manager() : new slate.script.Manager(), this, tY);
-        //     this.modules.add(manager);
-        //
-        //     if ((Main.profileManager == null && isProfile) || (Main.scriptManager == null && !isProfile)) {
-        //         return;
-        //     }
-        //
-        //     if (isProfile) {
-        //         for (Profile profile : Main.profileManager.profiles) {
-        //             if (Objects.equals(profile.getName(), "latest")) continue;
-        //             tY += 16;
-        //             ModuleComponent b = new ModuleComponent(profile.getModule(), this, tY);
-        //             this.modules.add(b);
-        //         }
-        //     }
-        //     else {
-        //         for (Module module : Main.scriptManager.scripts.values()) {
-        //             if (module instanceof SubMode)
-        //                 continue;
-        //
-        //             tY += 16;
-        //             ModuleComponent b = new ModuleComponent(module, this, tY);
-        //             this.modules.add(b);
-        //         }
-        //     }
-        // }
+        if (this.categoryName == Module.category.profiles) {
+            ModuleComponent manager = new ModuleComponent(new Manager(), this, tY);
+            this.modules.add(manager);
+
+            if (Main.profileManager == null) {
+                return;
+            }
+
+            for (Profile profile : Main.profileManager.profiles) {
+                if (Objects.equals(profile.getName(), "latest")) continue;
+                tY += 16;
+                ModuleComponent b = new ModuleComponent(profile.getModule(), this, tY);
+                this.modules.add(b);
+            }
+        }
 
         render();
     }

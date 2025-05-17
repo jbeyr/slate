@@ -5,7 +5,7 @@ import slate.clickgui.components.Component;
 import slate.module.Module;
 import slate.module.impl.client.Gui;
 import slate.utility.Utils;
-// import slate.utility.profile.ProfileModule;
+import slate.utility.profile.ProfileModule;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
@@ -29,7 +29,7 @@ public class BindComponent extends Component {
     public void render() {
         GL11.glPushMatrix();
         GL11.glScaled(0.5D, 0.5D, 0.5D);
-        this.drawString(!this.parent.mod.canBeEnabled() /*&& this.parent.mod.script == null*/ ? "Module cannot be bound." : this.isBinding ? "Press a key..." : "Current bind: '§e" + Utils.getKeyName(this.parent.mod.getKeycode()) + "§r'");
+        this.drawString(!this.parent.mod.canBeEnabled() ? "Module cannot be bound." : this.isBinding ? "Press a key..." : "Current bind: '§e" + Utils.getKeyName(this.parent.mod.getKeycode()) + "§r'");
         GL11.glPopMatrix();
     }
 
@@ -47,16 +47,16 @@ public class BindComponent extends Component {
             }
             else if (b == 1 && this.parent.mod.moduleCategory() != Module.category.profiles) {
                 this.parent.mod.setHidden(!this.parent.mod.isHidden());
-                // if (Main.currentProfile != null) {
-                //     ((ProfileModule) Main.currentProfile.getModule()).saved = false;
-                // }
+                if (Main.currentProfile != null) {
+                    ((ProfileModule) Main.currentProfile.getModule()).saved = false;
+                }
             }
             else if (b > 1) {
                 if (this.isBinding) {
                     this.parent.mod.setBind(b + 1000);
-                    // if (Main.currentProfile != null) {
-                    //     ((ProfileModule) Main.currentProfile.getModule()).saved = false;
-                    // }
+                    if (Main.currentProfile != null) {
+                        ((ProfileModule) Main.currentProfile.getModule()).saved = false;
+                    }
                     this.isBinding = false;
                 }
             }
@@ -71,13 +71,13 @@ public class BindComponent extends Component {
                 } else {
                     this.parent.mod.setBind(0);
                 }
-                // if (Main.currentProfile != null) {
-                //     ((ProfileModule) Main.currentProfile.getModule()).saved = false;
-                // }
+                if (Main.currentProfile != null) {
+                    ((ProfileModule) Main.currentProfile.getModule()).saved = false;
+                }
             } else {
-                // if (Main.currentProfile != null) {
-                //     ((ProfileModule) Main.currentProfile.getModule()).saved = false;
-                // }
+                if (Main.currentProfile != null) {
+                    ((ProfileModule) Main.currentProfile.getModule()).saved = false;
+                }
                 this.parent.mod.setBind(keybind);
             }
 

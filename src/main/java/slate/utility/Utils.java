@@ -186,7 +186,7 @@ public class Utils {
 
     public static void sendMessage(String txt) {
         if (nullCheckPasses()) {
-            String m = formatColor("&7[&dR&7]&r " + replace(txt));
+            String m = formatColor("&6[&gs&7]&r " + replace(txt));
             mc.thePlayer.addChatMessage(new ChatComponentText(m));
         }
     }

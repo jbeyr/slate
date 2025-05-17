@@ -7,7 +7,7 @@ import slate.module.impl.client.Gui;
 import slate.module.setting.Setting;
 import slate.module.setting.impl.SliderSetting;
 import slate.utility.Utils;
-// import slate.utility.profile.ProfileModule;
+import slate.utility.profile.ProfileModule;
 import slate.utility.render.RenderUtils;
 import org.lwjgl.opengl.GL11;
 
@@ -87,9 +87,9 @@ public class SliderComponent extends Component {
                 }
                 parent.categoryComponent.render();
             }
-            // if (Main.currentProfile != null) {
-            //     ((ProfileModule) Main.currentProfile.getModule()).saved = false;
-            // }
+            if (Main.currentProfile != null) {
+                ((ProfileModule) Main.currentProfile.getModule()).saved = false;
+            }
         }
 
     }

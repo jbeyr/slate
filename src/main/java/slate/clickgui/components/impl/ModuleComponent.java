@@ -7,8 +7,8 @@ import slate.module.Module;
 import slate.module.ModuleManager;
 import slate.module.impl.client.Gui;
 import slate.module.setting.Setting;
-// import slate.utility.profile.Manager;
-// import slate.utility.profile.ProfileModule;
+import slate.utility.profile.Manager;
+import slate.utility.profile.ProfileModule;
 import slate.utility.render.RenderUtils;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.opengl.GL11;
@@ -120,9 +120,9 @@ public class ModuleComponent implements IComponent {
         // if (this.mod.script != null && this.mod.script.error) {
         //     button_rgb = INVALID_COLOR;
         // }
-        // if (this.mod.moduleCategory() == Module.category.profiles && !(this.mod instanceof Manager) && !((ProfileModule) this.mod).saved && Main.currentProfile.getModule() == this.mod) {
-        //     button_rgb = UNSAVED_COLOR;
-        // }
+        if (this.mod.moduleCategory() == Module.category.profiles && !(this.mod instanceof Manager) && !((ProfileModule) this.mod).saved && Main.currentProfile.getModule() == this.mod) {
+            button_rgb = UNSAVED_COLOR;
+        }
         GL11.glPushMatrix();
         if (ModuleManager.clientTheme.test.isToggled()) {
             getFont().drawString(this.mod.getPrettyName(), (float) (this.categoryComponent.getX() + (double) this.categoryComponent.gw() / 2 - getFont().width(this.mod.getPrettyName()) / 2), (float) (this.categoryComponent.getY() + this.o + 4), button_rgb);
@@ -186,11 +186,11 @@ public class ModuleComponent implements IComponent {
     public void onClick(int x, int y, int b) {
         if (this.isHover(x, y) && b == 0 && this.mod.canBeEnabled()) {
             this.mod.toggle();
-            // if (this.mod.moduleCategory() != Module.category.profiles) {
-            //     if (Main.currentProfile != null) {
-            //         ((ProfileModule) Main.currentProfile.getModule()).saved = false;
-            //     }
-            // }
+            if (this.mod.moduleCategory() != Module.category.profiles) {
+                if (Main.currentProfile != null) {
+                    ((ProfileModule) Main.currentProfile.getModule()).saved = false;
+                }
+            }
         }
 
         if (this.isHover(x, y) && b == 1) {

@@ -14,6 +14,8 @@ import slate.module.Module;
 import slate.module.ModuleManager;
 import slate.utility.Reflection;
 import slate.utility.Utils;
+import slate.utility.profile.Profile;
+import slate.utility.profile.ProfileManager;
 import slate.utility.slate.PacketManager;
 
 import java.util.concurrent.Executors;
@@ -31,6 +33,9 @@ public class Main
     @Getter
     public static ModuleManager moduleManager;
     public static ClickGui clickGui;
+    public static ProfileManager profileManager;
+    public static Profile currentProfile;
+
 
     public static int moduleCounter;
 
@@ -54,15 +59,15 @@ public class Main
         moduleManager.register();
         // scriptManager = new ScriptManager();
         clickGui = new ClickGui();
-        // profileManager = new ProfileManager();
-        // profileManager.loadProfiles();
-        // profileManager.loadProfile();
+        profileManager = new ProfileManager();
+        profileManager.loadProfiles();
+        profileManager.loadProfile();
         Reflection.setKeyBindings();
         // MinecraftForge.EVENT_BUS.register(ModuleManager.rotationHandler);
         // MinecraftForge.EVENT_BUS.register(ModuleManager.slotHandler);
         // MinecraftForge.EVENT_BUS.register(ModuleManager.dynamicManager);
         // MinecraftForge.EVENT_BUS.register(new MoveableManager());
-        // MinecraftForge.EVENT_BUS.register(profileManager);
+        MinecraftForge.EVENT_BUS.register(profileManager);
     }
 
     @SubscribeEvent
@@ -99,13 +104,13 @@ public class Main
                             module.keybind();
                         }
                     }
-                    // synchronized (Main.profileManager.profiles) {
-                    //    for (Profile profile : Raven.profileManager.profiles) {
-                    //        if (mc.currentScreen == null) {
-                    //            profile.getModule().keybind();
-                    //        }
-                    //    }
-                    // }
+                    synchronized (Main.profileManager.profiles) {
+                       for (Profile profile : Main.profileManager.profiles) {
+                           if (mc.currentScreen == null) {
+                               profile.getModule().keybind();
+                           }
+                       }
+                    }
                 }
             } catch (Throwable ignored) {
             }

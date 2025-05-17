@@ -5,7 +5,7 @@ import slate.clickgui.components.Component;
 import slate.module.Module;
 import slate.module.setting.Setting;
 import slate.module.setting.impl.ButtonSetting;
-// import slate.utility.profile.ProfileModule;
+import slate.utility.profile.ProfileModule;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 
@@ -102,9 +102,9 @@ public class ButtonComponent extends Component {
                 this.mod.guiButtonToggled(this.buttonSetting);
             } catch (Exception ignored) {
             }
-            // if (Main.currentProfile != null) {
-            //     ((ProfileModule) Main.currentProfile.getModule()).saved = false;
-            // }
+            if (Main.currentProfile != null) {
+                ((ProfileModule) Main.currentProfile.getModule()).saved = false;
+            }
             parent.categoryComponent.render();
         }
     }

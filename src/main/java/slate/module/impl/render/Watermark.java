@@ -30,6 +30,8 @@ import java.util.Objects;
 public class Watermark extends Module {
     public static final Map<String, ResourceLocation> WATERMARK = new Object2ObjectOpenHashMap<>();
 
+    public static String customName = Main.MODID;
+
     public static int posX = 5;
     public static int posY = 5;
     public static int current$minX = 0;
