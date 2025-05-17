@@ -1,27 +1,18 @@
 package slate.module.setting.utils.slant;
 
-import net.minecraft.entity.EntityLivingBase;
 import org.jetbrains.annotations.NotNull;
-import slate.utility.RotationUtils;
-import slate.utility.Utils;
-import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 public class RayUtils {
     private static final Minecraft mc = Minecraft.getMinecraft();
 
-    public static Optional<Vec3> getNearestVisiblePointOnHitboxFromMyEyes(Entity target, float partialTicks, int samples) {
+    public static Optional<Vec3> nearestVisiblePointOnHitboxFromMyEyes(Entity target, float partialTicks, int samples) {
         if (mc.thePlayer == null || target == null) {
             return Optional.empty();
         }
@@ -57,7 +48,6 @@ public class RayUtils {
      * @param target entity to test
      * @return Optional containing the nearest visible Vec3, or empty if none
      */
-    // TODO use interpolated pos with partial ticks
     public static @NotNull Optional<Vec3> rayTraceNearestVisiblePoint(@NotNull Entity target,
                                                                       float partialTicks,
                                                                       int samples) {

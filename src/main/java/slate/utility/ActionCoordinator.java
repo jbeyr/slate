@@ -1,0 +1,26 @@
+package slate.utility;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.MovingObjectPosition;
+
+public class ActionCoordinator {
+    public static boolean isActingOnPlayerBehalfAllowed() {
+        Minecraft mc = Minecraft.getMinecraft();
+        return mc.thePlayer != null && mc.thePlayer.isEntityAlive() && mc.currentScreen == null && mc.inGameHasFocus;
+    }
+
+    public static boolean isClickAllowed() {
+        Minecraft mc = Minecraft.getMinecraft();
+        return isActingOnPlayerBehalfAllowed() && !mc.thePlayer.isUsingItem();
+    }
+
+    public static boolean isHotbarSelectedSlotChangeAllowed() {
+        MovingObjectPosition mop = Minecraft.getMinecraft().objectMouseOver;
+        return isActingOnPlayerBehalfAllowed() && mop.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK;
+    }
+
+    public static boolean isSneakingAllowed() {
+        return isActingOnPlayerBehalfAllowed();
+    }
+
+}

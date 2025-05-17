@@ -1,4 +1,4 @@
-package slate.module.impl.world;
+package slate.module.impl.world.targeting;
 
 import com.mojang.authlib.GameProfile;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+// should not make any calls to TargetManager; TargetManager already calls helpers in here
 public class AntiBot extends Module {
     private static final Map<EntityPlayer, Long> entities = new Object2LongOpenHashMap<>();
     private static final Set<EntityPlayer> filteredBot = new ObjectOpenHashSet<>();
@@ -59,7 +60,7 @@ public class AntiBot extends Module {
         this.registerSetting(whitelistChicken = new ButtonSetting("Whitelist chickens", false));
     }
 
-    public static boolean isBot(Entity entity) {
+    static boolean isBot(Entity entity) {
         if (!ModuleManager.antiBot.isEnabled()) {
             return false;
         }
@@ -125,9 +126,7 @@ public class AntiBot extends Module {
                 return unformattedText.length() >= 3 && unformattedText.charAt(0) == '§' && unformattedText.charAt(1) == 'c';
             }
         }
-
-        // if we don't think this is a bot, consult slant's antibot module too
-        return SlantAntiBot.isRecommendedTarget(entity);
+        return true;
     }
 
     private static @NotNull List<String> getTablist() {
@@ -192,3 +191,4 @@ public class AntiBot extends Module {
         lastPlayers.clear();
     }
 }
+

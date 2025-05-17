@@ -1,10 +1,6 @@
 package slate.utility.clicks;
 
-import slate.Main;
-import slate.module.impl.world.AntiBot;
-import slate.utility.Utils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.jetbrains.annotations.NotNull;

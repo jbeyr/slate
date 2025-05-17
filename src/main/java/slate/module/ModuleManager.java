@@ -2,9 +2,11 @@ package slate.module;
 
 import slate.module.impl.client.*;
 import slate.module.impl.combat.AimAssist;
-import slate.module.impl.world.*;
+import slate.module.impl.player.AutoWeapon;
 import slate.module.impl.render.*;
 import org.jetbrains.annotations.NotNull;
+import slate.module.impl.world.targeting.AntiBot;
+import slate.module.impl.world.targeting.TargetManager;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,7 +20,9 @@ public class ModuleManager {
     public static ClientTheme clientTheme;
     public static Watermark watermark;
     public static AimAssist aimAssist;
+    public static AutoWeapon autoWeapon;
 
+    public static TargetManager targetManager;
 
     static List<Module> modules = new ArrayList<>();
 
@@ -42,7 +46,6 @@ public class ModuleManager {
         this.addModule(new Gui());
         this.addModule(new Settings());
         this.addModule(notifications = new Notifications());
-
         this.addModule(hud = new HUD());
 
         // render
@@ -51,12 +54,17 @@ public class ModuleManager {
 
         // world
         this.addModule(antiBot = new AntiBot());
+        this.addModule(targetManager = new TargetManager());
+
+        // player
+        this.addModule(autoWeapon = new AutoWeapon());
 
         // combat
         this.addModule(aimAssist = new AimAssist());
 
         // enable
         antiBot.enable();
+        targetManager.enable();
         notifications.enable();
         clientTheme.enable();
         modules.sort(Comparator.comparing(Module::getPrettyName));

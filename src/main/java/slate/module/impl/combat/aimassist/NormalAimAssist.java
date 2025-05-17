@@ -10,8 +10,10 @@ import net.minecraft.util.Vec3;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.jetbrains.annotations.NotNull;
+import slate.module.Module;
+import slate.module.ModuleManager;
 import slate.module.impl.combat.AimAssist;
-import slate.module.impl.world.SlantAntiBot;
+import slate.module.impl.world.targeting.TargetManager;
 import slate.module.setting.impl.ButtonSetting;
 import slate.module.setting.impl.SliderSetting;
 import slate.module.setting.impl.SubMode;
@@ -179,13 +181,14 @@ public class NormalAimAssist extends SubMode<AimAssist> {
 
     private Optional<AimResult> findBestPotentialTarget(float partialTicks) {
         if (mc.theWorld == null || mc.thePlayer == null) return Optional.empty();
+        TargetManager tm = ModuleManager.targetManager;
 
         return mc.theWorld.loadedEntityList.stream()
                 .filter(e -> e instanceof EntityLivingBase)
                 .map(e -> (EntityLivingBase) e)
                 .filter(entity -> {
                     double dSq = Interpolate.interpolatedDistanceSqToEntity(mc.thePlayer, entity, partialTicks);
-                    return dSq <= maxRangeSq && dSq >= minRangeSq && SlantAntiBot.isRecommendedTarget(entity);
+                    return dSq <= maxRangeSq && dSq >= minRangeSq && tm.isRecommendedTarget(entity);
                 })
                 .map(entity -> viableAimPointForEntity(entity, partialTicks))
                 .flatMap(opt -> opt.map(Stream::of).orElseGet(Stream::empty))
@@ -212,7 +215,7 @@ public class NormalAimAssist extends SubMode<AimAssist> {
         if (RayUtils.hasDirectLineOfSight(playerEyePos, yOffsetPos)) {
             res = Optional.of(yOffsetPos);
         } else { // if direct point for yOffset is occluded, use visible sampled point
-            res = RayUtils.getNearestVisiblePointOnHitboxFromMyEyes(target, partialTicks, (int)samples.getInput());
+            res = RayUtils.nearestVisiblePointOnHitboxFromMyEyes(target, partialTicks, (int)samples.getInput());
         }
 
         return res.map(vec3 -> new AimResult(vec3, target));
