@@ -46,7 +46,6 @@ public class Backtrack extends Module {
 
         if (target == null) {
             shouldSpoof = false;
-            System.out.println("bt target is null");
             return;
         }
 
@@ -57,7 +56,6 @@ public class Backtrack extends Module {
         if (dSq < minRangeSq) {
             shouldSpoof = false;
             PacketManager.processWholePacketQueue();
-            System.out.println("bt: too close");
             return;
         }
 
@@ -65,7 +63,6 @@ public class Backtrack extends Module {
         if (dSq > maxRangeSq) {
             shouldSpoof = false;
             PacketManager.processWholePacketQueue();
-            System.out.println("bt: too far");
             return;
         }
 
@@ -79,11 +76,9 @@ public class Backtrack extends Module {
             if (boxedDist + sensitivityAdj < realDist) {
                 PacketManager.processWholePacketQueue(); // send everything
             } else {
-                System.out.println("bt: backtracking");
                 shouldSpoof = true; // hold packets → spoof
             }
         } else {
-            System.out.println("bt: target box not present; stopping");
             shouldSpoof = false; // no cached box
         }
     }

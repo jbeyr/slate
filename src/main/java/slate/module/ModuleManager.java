@@ -5,6 +5,8 @@ import slate.module.impl.combat.AimAssist;
 import slate.module.impl.combat.AutoClicker;
 import slate.module.impl.combat.Backtrack;
 import slate.module.impl.combat.BlockHit;
+import slate.module.impl.minigames.BedWars;
+import slate.module.impl.movement.BridgeAssist;
 import slate.module.impl.movement.Sprint;
 import slate.module.impl.other.ModSpoofer;
 import slate.module.impl.other.PingSpoofer;
@@ -13,6 +15,7 @@ import slate.module.impl.player.AutoWeapon;
 import slate.module.impl.render.*;
 import org.jetbrains.annotations.NotNull;
 import slate.module.impl.world.DelayRemover;
+import slate.module.impl.world.FastPlace;
 import slate.module.impl.world.targeting.AntiBot;
 import slate.module.impl.world.targeting.TargetManager;
 
@@ -35,12 +38,17 @@ public class ModuleManager {
     public static InvisESP invisESP;
     public static NoHurtCam noHurtCam;
     public static NoCameraClip noCameraClip;
+    public static CustomFOV customFOV;
+    public static Chams chams;
+    public static Particles particles;
 
     public static AntiBot antiBot;
     public static TargetManager targetManager;
+
     public static DelayRemover delayRemover;
     public static AutoWeapon autoWeapon;
     public static AutoTool autoTool;
+    public static FastPlace fastPlace;
 
     public static AutoClicker autoClicker;
     public static AimAssist aimAssist;
@@ -48,10 +56,12 @@ public class ModuleManager {
     public static Backtrack backtrack;
 
     public static Sprint sprint;
+    public static BridgeAssist bridgeAssist;
 
     public static ModSpoofer modSpoofer;
     public static PingSpoofer pingSpoofer;
 
+    public static BedWars bedWars;
 
     static List<Module> modules = new ArrayList<>();
 
@@ -87,6 +97,9 @@ public class ModuleManager {
         this.addModule(invisESP = new InvisESP());
         this.addModule(noHurtCam = new NoHurtCam());
         this.addModule(noCameraClip = new NoCameraClip());
+        this.addModule(customFOV = new CustomFOV());
+        this.addModule(chams = new Chams());
+        this.addModule(particles = new Particles());
 
         // world
         this.addModule(antiBot = new AntiBot());
@@ -96,6 +109,7 @@ public class ModuleManager {
         this.addModule(delayRemover = new DelayRemover());
         this.addModule(autoWeapon = new AutoWeapon());
         this.addModule(autoTool = new AutoTool());
+        this.addModule(fastPlace = new FastPlace());
 
         // combat
         this.addModule(aimAssist = new AimAssist());
@@ -105,10 +119,14 @@ public class ModuleManager {
 
         // movement
         this.addModule(sprint = new Sprint());
+        this.addModule(bridgeAssist = new BridgeAssist());
 
         // other
         this.addModule(modSpoofer = new ModSpoofer());
         this.addModule(pingSpoofer = new PingSpoofer());
+
+        // minigames
+        this.addModule(bedWars = new BedWars());
 
         // enable
         antiBot.enable();

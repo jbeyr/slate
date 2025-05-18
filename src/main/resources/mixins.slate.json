@@ -17,6 +17,8 @@
     "client.MixinMinecraft",
     "client.MixinMouseHelper",
     "entity.EntityPlayerSPAccessor",
+    "entity.MixinEntityPlayerSP",
+    "entity.MixinEntityRenderer",
     "entity.MixinPlayerControllerMP",
     "render.MixinEntityRenderer",
     "render.RenderManagerAccessor"
