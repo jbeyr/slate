@@ -23,11 +23,11 @@ import slate.utility.Utils;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-// fixme after reaching desired position for a target it oscillates within 0.1 yaw and pitch values (ex: 35.2, 35.3, and back, and so on)
 public class NormalAimAssist extends SubMode<AimAssist> {
 
     private float maxRangeSq;
     private float minRangeSq;
+    private static final float DEADZONE_ANGLE = 0.3f;
 
     private final SliderSetting maxRange = new SliderSetting("Max Distance", 3.2, 0d, 5d, 0.01);
     private final SliderSetting minRange = new SliderSetting("Min Distance", 0d, 0d, 3d, 0.1);
@@ -133,6 +133,16 @@ public class NormalAimAssist extends SubMode<AimAssist> {
 
                         float yawDifference = MathHelper.wrapAngleTo180_float(targetYaw - playerViewYaw);
                         float pitchDifference = targetPitch - playerViewPitch;
+
+
+                        // use deadzone to prevent oscillating between a tenth of a degree
+                        if (Math.abs(yawDifference) < DEADZONE_ANGLE && Math.abs(pitchDifference) < DEADZONE_ANGLE) {
+                            // close enough to target, so don't assist here
+                            rawFractionalMouseDXThisFrame = 0;
+                            rawFractionalMouseDYThisFrame = 0;
+                            accumulatedMouseDX = 0;
+                            accumulatedMouseDY = 0;
+                        }
 
                         float dynamicStrengthFactor = 1.0f;
 
