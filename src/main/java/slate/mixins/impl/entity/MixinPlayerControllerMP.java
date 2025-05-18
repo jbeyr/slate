@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import slate.module.ModuleManager;
+import slate.module.impl.other.SlotHandler;
 import slate.module.impl.player.AutoTool;
 import slate.module.impl.world.DelayRemover;
 import slate.utility.Utils;
@@ -39,7 +40,7 @@ public class MixinPlayerControllerMP {
             Block block = mc.theWorld.getBlockState(posBlock).getBlock();
             int slot = Utils.getTool(block);
             if (slot != mc.thePlayer.inventory.currentItem) {
-                mc.thePlayer.inventory.currentItem = slot;
+                SlotHandler.setCurrentSlot(slot);
             }
         }
     }
