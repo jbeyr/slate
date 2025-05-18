@@ -3,6 +3,7 @@ package slate.mixins.impl.entity;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,6 +19,7 @@ import slate.module.impl.other.SlotHandler;
 import slate.module.impl.player.AutoTool;
 import slate.module.impl.world.DelayRemover;
 import slate.utility.Utils;
+import slate.utility.slate.ActionCoordinator;
 
 @Mixin(PlayerControllerMP.class)
 public class MixinPlayerControllerMP {
@@ -36,12 +38,9 @@ public class MixinPlayerControllerMP {
         AutoTool at = ModuleManager.autoTool;
 
         Minecraft mc = Minecraft.getMinecraft();
-        if (at.isEnabled()) {
-            Block block = mc.theWorld.getBlockState(posBlock).getBlock();
-            int slot = Utils.getTool(block);
-            if (slot != mc.thePlayer.inventory.currentItem) {
-                SlotHandler.setCurrentSlot(slot);
-            }
+        if (at.isEnabled() && ActionCoordinator.isHotbarSelectedSlotChangeAllowed()) {
+            Block b = mc.theWorld.getBlockState(posBlock).getBlock();
+            at.swapToToolFor(b);
         }
     }
 

@@ -22,6 +22,7 @@ import java.util.List;
 public class Tracers extends Module {
     private float maxDistanceSqr;
 
+    private final ButtonSetting onlyPlayers = new ButtonSetting("Only players", true);
     private final SliderSetting cameraDistance = new SliderSetting("Distance", 80d, -10d, 30d, 1d); // [-10f, 30f]
     private final SliderSetting maxDistance = new SliderSetting("Distance", 20d, 5d, 50d, 1);
     private final ButtonSetting respectLineOfSight = new ButtonSetting("Line of sight", false);
@@ -44,7 +45,6 @@ public class Tracers extends Module {
     public void onRenderWorldLast(RenderWorldLastEvent event) {
         if (!isEnabled()) return;
 
-        Minecraft mc = Minecraft.getMinecraft();
         EntityPlayer me = mc.thePlayer;
         if (me == null) return;
 
@@ -74,11 +74,12 @@ public class Tracers extends Module {
         List<EntityDatum> entities = new ArrayList<>();
 
         for (Entity entity : mc.theWorld.loadedEntityList) {
-            if(entity == me) continue;
+            if (entity == me) continue;
             if (!(entity instanceof EntityLivingBase)) continue;
-            if(!ModuleManager.targetManager.isRecommendedTarget((EntityLivingBase) entity)) continue;
+            if (onlyPlayers.isToggled() && !(entity instanceof EntityPlayer)) continue;
+            if (!ModuleManager.targetManager.isRecommendedTarget((EntityLivingBase) entity)) continue;
 
-            // Interpolate entity position
+            // interpolate entity position
             double entityX = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * partialTicks;
             double entityY = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * partialTicks;
             double entityZ = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * partialTicks;

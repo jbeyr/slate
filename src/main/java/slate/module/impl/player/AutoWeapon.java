@@ -4,6 +4,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import slate.module.Module;
 import slate.module.setting.impl.DescriptionSetting;
 import slate.utility.Utils;
+import slate.utility.slate.ActionCoordinator;
 
 public class AutoWeapon extends Module {
 
@@ -14,10 +15,10 @@ public class AutoWeapon extends Module {
 
     public void swapToWeapon() {
         EntityPlayer me = mc.thePlayer;
-        int weaponSlot = Utils.getWeapon();
-        if (weaponSlot == -1) return;
-        if (me.inventory.currentItem != weaponSlot) {
-            me.inventory.currentItem = weaponSlot;
+        int slot = Utils.getWeapon();
+        if (slot == -1) return;
+        if (me.inventory.currentItem != slot) {
+            me.inventory.currentItem = slot;
         }
     }
 }

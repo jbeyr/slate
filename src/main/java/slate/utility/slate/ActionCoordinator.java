@@ -15,8 +15,7 @@ public class ActionCoordinator {
     }
 
     public static boolean isHotbarSelectedSlotChangeAllowed() {
-        MovingObjectPosition mop = Minecraft.getMinecraft().objectMouseOver;
-        return isActingOnPlayerBehalfAllowed() && mop.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK;
+        return isActingOnPlayerBehalfAllowed();
     }
 
     public static boolean isSneakingAllowed() {

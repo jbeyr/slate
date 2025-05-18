@@ -51,7 +51,7 @@ public abstract class MixinEntityPlayer extends EntityLivingBase {
     @SuppressWarnings({"UnresolvedMixinReference", "ExtractMethodRecommender"})
     @Inject(method = "attackTargetEntityWithCurrentItem", at = @At("HEAD"), cancellable = true)
     public void attackTargetEntityWithCurrentItem(Entity p_attackTargetEntityWithCurrentItem_1_, CallbackInfo ci) {
-        if (ForgeHooks.onPlayerAttackTarget((EntityPlayer) (Object) this /* og: `this */, p_attackTargetEntityWithCurrentItem_1_)) {
+        if (ForgeHooks.onPlayerAttackTarget((EntityPlayer) (Object) this, p_attackTargetEntityWithCurrentItem_1_)) {
             if (p_attackTargetEntityWithCurrentItem_1_.canAttackWithItem() && !p_attackTargetEntityWithCurrentItem_1_.hitByEntity(this)) {
                 float f = (float)mc.thePlayer.getEntityAttribute(SharedMonsterAttributes.attackDamage).getAttributeValue();
                 int i = 0;

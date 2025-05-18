@@ -6,7 +6,10 @@ import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.monster.EntityGolem;
+import net.minecraft.entity.monster.EntityIronGolem;
 import net.minecraft.entity.monster.EntityMob;
+import net.minecraft.entity.monster.EntitySilverfish;
+import net.minecraft.entity.passive.EntityChicken;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
@@ -18,9 +21,13 @@ public class TargetManager extends Module {
     private final ButtonSetting onlyPlayers = new ButtonSetting("Only players", true);
     private final ButtonSetting respectTeams = new ButtonSetting("Respect teams", true);
 
+    private final ButtonSetting whitelistSilverfish = new ButtonSetting("Whitelist silverfish", false, "Will override only players setting");
+    private final ButtonSetting whitelistGolems = new ButtonSetting("Whitelist golems", false, "Will override only players setting");
+    private final ButtonSetting whitelistChickens = new ButtonSetting("Whitelist chickens", false, "Will override only players setting");
+
     public TargetManager() {
         super("Target Manager", category.world);
-        this.registerSetting(onlyPlayers, respectTeams);
+        this.registerSetting(onlyPlayers, respectTeams, whitelistChickens, whitelistGolems, whitelistSilverfish);
     }
 
     public boolean isRecommendedTarget(Entity en) {
@@ -35,10 +42,16 @@ public class TargetManager extends Module {
         boolean isPlayer = elb instanceof EntityPlayer;
 
         if (elb == null || me == elb) return false;
+        if(!elb.isEntityAlive()) return false;
+
+        if (whitelistGolems.isToggled() && elb instanceof EntityIronGolem) return true;
+        if (whitelistSilverfish.isToggled() && elb instanceof EntitySilverfish) return true;
+        if (whitelistChickens.isToggled() && elb instanceof EntityChicken) return true;
+
         if (!isPlayer && onlyPlayers.isToggled()) return false;
         if (elb instanceof EntityArmorStand || ((!(elb instanceof EntityMob) && elb instanceof EntityCreature && !(elb instanceof EntityGolem)))) return false;
         if (respectTeams.isToggled() && isPlayer && hasSameHelmetColor(me, elb)) return false;
-        return elb.isEntityAlive() && !AntiBot.isBot(elb);
+        return !AntiBot.isBot(elb);
     }
 
     private boolean hasSameHelmetColor(EntityLivingBase player, EntityLivingBase otherPlayer) {

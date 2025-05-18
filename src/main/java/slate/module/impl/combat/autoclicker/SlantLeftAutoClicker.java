@@ -7,9 +7,7 @@ import slate.module.setting.impl.SliderSetting;
 import slate.module.setting.impl.SubMode;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.projectile.EntityFireball;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.client.event.MouseEvent;
@@ -23,10 +21,13 @@ import slate.utility.Utils;
 import java.util.Optional;
 
 public class SlantLeftAutoClicker extends SubMode<IAutoClicker> {
-    private final SliderSetting minCPS = new SliderSetting("Min CPS", 12, 10, 25, 0.05);;
-    private final SliderSetting maxCPS = new SliderSetting("Max CPS", 14, 10, 25, 0.05);;
+    private final SliderSetting minCPS = new SliderSetting("Min CPS", 12, 10, 25, 0.05);
+    private final SliderSetting maxCPS = new SliderSetting("Max CPS", 14, 10, 25, 0.05);
     private final ButtonSetting triggerBot = new ButtonSetting("Trigger on hover", false);
     private final ButtonSetting hitFireballsOnHold = new ButtonSetting("Hit fireballs on hold", true);
+
+    private long lastClickTime = 0;
+    private long clickDelay = 0;
 
     public SlantLeftAutoClicker(String name, @NotNull IAutoClicker parent) {
         super(name, parent);
@@ -38,9 +39,6 @@ public class SlantLeftAutoClicker extends SubMode<IAutoClicker> {
         Utils.correctValue(minCPS, maxCPS);
     }
 
-    private long lastClickTime = 0;
-    private long clickDelay = 0;
-
     public Optional<Entity> entityOnCrosshair() {
         if(!Utils.nullCheckPasses()) return Optional.empty();
 
@@ -49,9 +47,7 @@ public class SlantLeftAutoClicker extends SubMode<IAutoClicker> {
 
         if (objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY) {
             Entity entity = objectMouseOver.entityHit;
-            if ((entity instanceof EntityPlayer && tm.isRecommendedTarget(entity))
-                    || (entity instanceof EntityLiving && entity.isEntityAlive())
-                    || (entity instanceof EntityFireball && hitFireballsOnHold.isToggled() && Mouse.isButtonDown(0))) {
+            if (tm.isRecommendedTarget(entity) || (entity instanceof EntityFireball && hitFireballsOnHold.isToggled() && Mouse.isButtonDown(0))) {
                 return Optional.of(entity);
             }
         }

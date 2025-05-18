@@ -10,6 +10,7 @@ import net.minecraft.util.Vec3;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.jetbrains.annotations.NotNull;
+import slate.mixins.impl.client.PlayerControllerMPAccessor;
 import slate.module.ModuleManager;
 import slate.module.impl.combat.AimAssist;
 import slate.module.impl.world.targeting.TargetManager;
@@ -34,8 +35,9 @@ public class NormalAimAssist extends SubMode<AimAssist> {
     private final SliderSetting fov = new SliderSetting("FOV", 180, 1, 360, 1);
     private final SliderSetting strength = new SliderSetting("Strength", 0.3d, 0, 0.5d, 0.01);
     private final SliderSetting yOffset = new SliderSetting("Y-Offset", 0d, -1.5, 1.5, 0.01);
-    private final ButtonSetting clickAim = new ButtonSetting("Click Aim", false);
     private final SliderSetting samples = new SliderSetting("Samples", 3, 3, 20, 1);
+    private final ButtonSetting clickAim = new ButtonSetting("Click Aim", false);
+    private final ButtonSetting aimWhileMining = new ButtonSetting("While mining", false);
 
     // for smoothing/accumulation
     private float accumulatedMouseDX = 0.0f;
@@ -51,7 +53,7 @@ public class NormalAimAssist extends SubMode<AimAssist> {
 
     public NormalAimAssist(String name, @NotNull AimAssist parent) {
         super(name, parent);
-        this.registerSetting(maxRange, minRange, fov, strength, yOffset, clickAim, samples);
+        this.registerSetting(maxRange, minRange, fov, strength, yOffset, samples, clickAim, aimWhileMining);
     }
 
     @Override
@@ -106,7 +108,8 @@ public class NormalAimAssist extends SubMode<AimAssist> {
             return;
         }
 
-        boolean shouldAimThisFrame = !clickAim.isToggled() || (mc.gameSettings.keyBindAttack != null && mc.gameSettings.keyBindAttack.isKeyDown());
+        boolean shouldAimThisFrame = (!clickAim.isToggled() || (mc.gameSettings.keyBindAttack != null && mc.gameSettings.keyBindAttack.isKeyDown()))
+                && (aimWhileMining.isToggled() || !((PlayerControllerMPAccessor) mc.playerController).isHittingBlock());
         float frameStrength = (float)strength.getInput();
 
         float rawFractionalMouseDXThisFrame = 0.0f;
