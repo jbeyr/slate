@@ -179,6 +179,8 @@ public class PacketManager {
            Backtrack bt = ModuleManager.backtrack;
 
            if (bt.isEnabled() && target != null && currTickTargetPos != null && prevTickTargetPos != null) {
+               double dSq = mc.thePlayer.getDistanceSqToEntity(target);
+               if(!(bt.getMinRangeSq() <= dSq && dSq <= bt.getMaxRangeSq())) return;
                long currentTime = System.currentTimeMillis();
                long timeSinceLastUpdate = currentTime - currTickTargetTime;
                long updateInterval = currTickTargetTime - prevTickTargetTime;

@@ -60,7 +60,7 @@ public class AntiBot extends Module {
         this.registerSetting(whitelistChicken = new ButtonSetting("Whitelist chickens", false));
     }
 
-    static boolean isBot(Entity entity) {
+    public static boolean isBot(Entity entity) {
         if (!ModuleManager.antiBot.isEnabled()) {
             return false;
         }

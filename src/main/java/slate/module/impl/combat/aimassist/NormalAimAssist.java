@@ -38,6 +38,10 @@ public class NormalAimAssist extends SubMode<AimAssist> {
     private final SliderSetting samples = new SliderSetting("Samples", 3, 3, 20, 1);
     private final ButtonSetting clickAim = new ButtonSetting("Click Aim", false);
     private final ButtonSetting aimWhileMining = new ButtonSetting("While mining", false);
+    private final SliderSetting hurtTimeThreshold = new SliderSetting("Hurt Time Threshold", 0, 0, 10, 1);
+
+    private final ButtonSetting switchTargets = new ButtonSetting("Switch fighters", false);
+    private final SliderSetting switchFov     = new SliderSetting("Switch FOV", 60, 1, 180, 1, switchTargets::isToggled);
 
     // for smoothing/accumulation
     private float accumulatedMouseDX = 0.0f;
@@ -49,16 +53,19 @@ public class NormalAimAssist extends SubMode<AimAssist> {
     @Getter
     private int assistDY_toApplyThisFrame = 0;
 
-    private Optional<AimResult> currentTarget;
+    private Optional<AimResult> currentTarget = Optional.empty();
+    private boolean pendingSwitch = false;
+    private EntityLivingBase switchExclude = null;
 
     public NormalAimAssist(String name, @NotNull AimAssist parent) {
         super(name, parent);
-        this.registerSetting(maxRange, minRange, fov, strength, yOffset, samples, clickAim, aimWhileMining);
+        this.registerSetting(maxRange, minRange, fov, strength, yOffset, samples, clickAim, aimWhileMining, hurtTimeThreshold, switchTargets, switchFov);
     }
 
     @Override
     public void guiUpdate() {
         Utils.correctValue(minRange, maxRange);
+        Utils.correctValue(switchFov, fov);
 
         minRangeSq = (float) (minRange.getInput()*minRange.getInput());
         maxRangeSq = (float) (maxRange.getInput()*maxRange.getInput());
@@ -116,55 +123,97 @@ public class NormalAimAssist extends SubMode<AimAssist> {
         float rawFractionalMouseDYThisFrame = 0.0f;
 
         if (shouldAimThisFrame) {
-            currentTarget = findBestPotentialTarget(partialTicks);
+
+            /* 0) ───── throw away invalid target ───── */
+            if (currentTarget.isPresent() &&
+                    !isTargetStillValid(currentTarget.get(), partialTicks)) {
+                currentTarget = Optional.empty();
+            }
+
+            /* 1) ───── perform swap requested by the autoclicker ───── */
+            if (pendingSwitch) {
+
+                Optional<AimResult> newTarget = findBestPotentialTarget(
+                        partialTicks,
+                        (float) switchFov.getInput(),   // narrow cone
+                        switchExclude                   // exclude the entity we just hit
+                );
+
+                // Only switch when there is a DIFFERENT target to switch to.
+                if (newTarget.isPresent()) {
+                    currentTarget = newTarget;          // swap
+                }
+                // else: stay locked on the old one
+                pendingSwitch = false;                  // request handled
+            }
+
+
+            /* 2) ───── normal acquisition fallback ───── */
+            if (!currentTarget.isPresent()) {
+                currentTarget = findBestPotentialTarget(          // ← CHANGED
+                        partialTicks,
+                        (float) fov.getInput(),                   // use normal-FOV
+                        null);                                   // no exclusion
+            }
+
+            /* refresh the stored aim-vector each tick */
             if (currentTarget.isPresent()) {
-                Vec3 playerEyePos = Interpolate.interpolatedPosEyes(partialTicks);
-                    Vec3 targetAimPos = currentTarget.get().aimVec;
+                EntityLivingBase tgt = currentTarget.get().getTarget();
 
-                    double dx = targetAimPos.xCoord - playerEyePos.xCoord;
-                    double dy = targetAimPos.yCoord - playerEyePos.yCoord;
-                    double dz = targetAimPos.zCoord - playerEyePos.zCoord;
+                // update coordinates; lost LoS / range / etc.; let acquisition pick another
+                currentTarget = viableAimPointForEntity(tgt, partialTicks);
+            }
 
-                    double distanceHorizontal = MathHelper.sqrt_double(dx * dx + dz * dz);
+            if (currentTarget.isPresent()) {
 
-                    if (distanceHorizontal > 0.01) {
-                        float targetYaw = (float) (MathHelper.atan2(dz, dx) * 180.0D / Math.PI) - 90.0F;
-                        float targetPitch = (float) -(MathHelper.atan2(dy, distanceHorizontal) * 180.0D / Math.PI);
+                Vec3 playerEyePos  = Interpolate.interpolatedPosEyes(partialTicks);
+                Vec3 targetAimPos  = currentTarget.get().aimVec;
 
-                        float playerViewYaw = mc.thePlayer.rotationYaw;
-                        float playerViewPitch = mc.thePlayer.rotationPitch;
+                double dx = targetAimPos.xCoord - playerEyePos.xCoord;
+                double dy = targetAimPos.yCoord - playerEyePos.yCoord;
+                double dz = targetAimPos.zCoord - playerEyePos.zCoord;
 
-                        float yawDifference = MathHelper.wrapAngleTo180_float(targetYaw - playerViewYaw);
-                        float pitchDifference = targetPitch - playerViewPitch;
+                double distHoriz = MathHelper.sqrt_double(dx * dx + dz * dz);
+                if (distHoriz > 0.01) {
 
+                    float targetYaw   = (float)(MathHelper.atan2(dz, dx) * 180.0D / Math.PI) - 90.0F;
+                    float targetPitch = (float)-(MathHelper.atan2(dy, distHoriz) * 180.0D / Math.PI);
 
-                        // use deadzone to prevent oscillating between a tenth of a degree
-                        if (Math.abs(yawDifference) < DEADZONE_ANGLE && Math.abs(pitchDifference) < DEADZONE_ANGLE) {
-                            // close enough to target, so don't assist here
-                            rawFractionalMouseDXThisFrame = 0;
-                            rawFractionalMouseDYThisFrame = 0;
-                            accumulatedMouseDX = 0;
-                            accumulatedMouseDY = 0;
-                        }
+                    float playerYaw   = mc.thePlayer.rotationYaw;
+                    float playerPitch = mc.thePlayer.rotationPitch;
 
-                        float dynamicStrengthFactor = 1.0f;
+                    float yawDiff   = MathHelper.wrapAngleTo180_float(targetYaw - playerYaw);
+                    float pitchDiff = targetPitch - playerPitch;
 
-                        float yawToApplyDegrees = yawDifference * frameStrength * dynamicStrengthFactor;
-                        float pitchToApplyDegrees = pitchDifference * frameStrength * dynamicStrengthFactor;
+                    /* Dead-zone to avoid tiny oscillations */
+                    if (Math.abs(yawDiff)  < DEADZONE_ANGLE &&
+                            Math.abs(pitchDiff) < DEADZONE_ANGLE) {
 
-                        float sensitivity = mc.gameSettings.mouseSensitivity * 0.6F + 0.2F;
-                        float power = sensitivity * sensitivity * sensitivity * 8.0F;
-                        float degreesPerMouseDeltaUnit = power * 0.15F;
+                        rawFractionalMouseDXThisFrame = 0;
+                        rawFractionalMouseDYThisFrame = 0;
+                        accumulatedMouseDX = 0;
+                        accumulatedMouseDY = 0;
 
-                        if (degreesPerMouseDeltaUnit > 0.0001f) {
-                            rawFractionalMouseDXThisFrame = yawToApplyDegrees / degreesPerMouseDeltaUnit;
-                            rawFractionalMouseDYThisFrame = -pitchToApplyDegrees / degreesPerMouseDeltaUnit;
+                    } else {
+
+                        float yawApply   = yawDiff   * frameStrength;
+                        float pitchApply = pitchDiff * frameStrength;
+
+                        float sens = mc.gameSettings.mouseSensitivity * 0.6F + 0.2F;
+                        float factor = sens * sens * sens * 8.0F * 0.15F;     // deg per delta-unit
+
+                        if (factor > 0.0001f) {
+                            rawFractionalMouseDXThisFrame =  yawApply   / factor;
+                            rawFractionalMouseDYThisFrame = -pitchApply / factor;
                         }
                     }
+                }
             }
+
         } else {
             currentTarget = Optional.empty();
         }
+        // ───────────────────────────────────────────────────────────────────────────────
 
         accumulatedMouseDX += rawFractionalMouseDXThisFrame;
         accumulatedMouseDY += rawFractionalMouseDYThisFrame;
@@ -191,24 +240,42 @@ public class NormalAimAssist extends SubMode<AimAssist> {
         }
     }
 
+    @SubscribeEvent
+    public void onAutoClickerAttack(slate.event.custom.AutoclickerAttackEvent e) {
+        if (!switchTargets.isToggled()) return;               // feature off?
+        if (!(e.getAttacked() instanceof EntityLivingBase)) return;
+        pendingSwitch = true;                                 // request swap
+        switchExclude = (EntityLivingBase) e.getAttacked();   // don’t retarget same entity
+    }
 
-    private Optional<AimResult> findBestPotentialTarget(float partialTicks) {
-        if (mc.theWorld == null || mc.thePlayer == null) return Optional.empty();
+
+    private Optional<AimResult> findBestPotentialTarget(float partialTicks,
+                                                        float fovCone,
+                                                        EntityLivingBase exclude) {
+
         TargetManager tm = ModuleManager.targetManager;
 
         return mc.theWorld.loadedEntityList.stream()
                 .filter(e -> e instanceof EntityLivingBase)
                 .map(e -> (EntityLivingBase) e)
+                .filter(entity -> entity != exclude)
+                .filter(entity -> entity.hurtTime <= hurtTimeThreshold.getInput())
                 .filter(entity -> {
                     double dSq = Interpolate.interpolatedDistanceSqToEntity(mc.thePlayer, entity, partialTicks);
                     return minRangeSq <= dSq && dSq <= maxRangeSq && tm.isRecommendedTarget(entity);
                 })
                 .map(entity -> viableAimPointForEntity(entity, partialTicks))
                 .flatMap(opt -> opt.map(Stream::of).orElseGet(Stream::empty))
-                .filter(ar -> isWithinFOVInterpolated((float) fov.getInput(), partialTicks, ar.getAimVec()))
+                //  NEW – fov parameter now passed in from caller (normal or switch-FOV)
+                .filter(ar -> isWithinFOVInterpolated(fovCone, partialTicks, ar.getAimVec()))
                 .limit(5)
-                .min((AimResult a1, AimResult a2) -> Double.compare(angleToEntityCrosshairInterpolated(partialTicks, a1), angleToEntityCrosshairInterpolated(partialTicks, a2)));
-                // ^ pick one with the smallest angle
+                .min((a1, a2) -> Double.compare(
+                        angleToEntityCrosshairInterpolated(partialTicks, a1),
+                        angleToEntityCrosshairInterpolated(partialTicks, a2)));
+    }
+
+    private Optional<AimResult> findBestPotentialTarget(float partialTicks) {
+        return findBestPotentialTarget(partialTicks, (float) fov.getInput(), null);
     }
 
     @Data @AllArgsConstructor
@@ -283,5 +350,20 @@ public class NormalAimAssist extends SubMode<AimAssist> {
         float yawDiff = Math.abs(MathHelper.wrapAngleTo180_float(requiredYaw - playerViewYaw));
         float pitchDiff = Math.abs(requiredPitch - playerViewPitch);
         return yawDiff + pitchDiff;
+    }
+
+    private boolean isTargetStillValid(AimResult ar, float partialTicks) {
+        EntityLivingBase e = ar.getTarget();
+        if (e == null || e.isDead || e.getHealth() <= 0) return false;
+
+        // out of world list via despawn or teleport
+        if (!mc.theWorld.loadedEntityList.contains(e)) return false;
+
+        // range check
+        double dSq = Interpolate.interpolatedDistanceSqToEntity(mc.thePlayer, e, partialTicks);
+        if (dSq < minRangeSq || dSq > maxRangeSq) return false;
+
+        // keep inside normal FOV so we don’t stare at someone behind
+        return isWithinFOVInterpolated((float) fov.getInput(), partialTicks, ar.getAimVec());
     }
 }

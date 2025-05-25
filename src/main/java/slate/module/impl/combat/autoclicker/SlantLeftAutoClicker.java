@@ -25,13 +25,15 @@ public class SlantLeftAutoClicker extends SubMode<IAutoClicker> {
     private final SliderSetting maxCPS = new SliderSetting("Max CPS", 14, 10, 25, 0.05);
     private final ButtonSetting triggerBot = new ButtonSetting("Trigger on hover", false);
     private final ButtonSetting hitFireballsOnHold = new ButtonSetting("Hit fireballs on hold", true);
+    private final SliderSetting hurtTimeThreshold = new SliderSetting("Hurt Time Threshold", 0, 0, 10, 1);
+
 
     private long lastClickTime = 0;
     private long clickDelay = 0;
 
     public SlantLeftAutoClicker(String name, @NotNull IAutoClicker parent) {
         super(name, parent);
-        this.registerSetting(minCPS, maxCPS, triggerBot, hitFireballsOnHold);
+        this.registerSetting(minCPS, maxCPS, triggerBot, hitFireballsOnHold, hurtTimeThreshold);
     }
 
     @Override
@@ -55,24 +57,31 @@ public class SlantLeftAutoClicker extends SubMode<IAutoClicker> {
         return Optional.empty();
     }
 
-    public void legitLeftClick() {
+    public void legitLeftClick(Entity target) {
         int key = mc.gameSettings.keyBindAttack.getKeyCode();
         KeyBinding.setKeyBindState(key, true);
         KeyBinding.onTick(key);
+        if(target instanceof EntityLivingBase) ModuleManager.autoClicker.sendAutoclickerAttackEvent((EntityLivingBase) target);
         KeyBinding.setKeyBindState(key, false);
     }
 
-    public boolean shouldClick() {
+    public Optional<Entity> shouldClick() {
         Optional<Entity> enInCrosshair = entityOnCrosshair();
         TargetManager tm = ModuleManager.targetManager;
 
-        return isEnabled()
+        boolean b = isEnabled()
                 && ActionCoordinator.isClickAllowed()
                 && (Mouse.isButtonDown(0) || triggerBot.isToggled()) // is mouse pressed or trigger bot on
                 && hasCooldownExpired()
-                && (enInCrosshair.isPresent()
-                    && (!(enInCrosshair.get() instanceof EntityLivingBase /* so we can hit fireballs */) || tm.isRecommendedTarget(enInCrosshair.get()))
+                && (
+                    enInCrosshair.isPresent()
+                    && (
+                            !(enInCrosshair.get() instanceof EntityLivingBase /* so we can hit fireballs */)
+                            || ((EntityLivingBase) enInCrosshair.get()).hurtTime <= hurtTimeThreshold.getInput() && tm.isRecommendedTarget(enInCrosshair.get())
+                    )
                 );
+
+        return b ? enInCrosshair : Optional.empty();
     }
 
     public void resetClickDelay() {
@@ -101,9 +110,10 @@ public class SlantLeftAutoClicker extends SubMode<IAutoClicker> {
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.START) return;
 
-        if (shouldClick()) {
+        Optional<Entity> target = shouldClick();
+        if (target.isPresent()) {
             if (ModuleManager.autoWeapon.isEnabled() && ActionCoordinator.isHotbarSelectedSlotChangeAllowed()) ModuleManager.autoWeapon.swapToWeapon();
-            legitLeftClick();
+            legitLeftClick(target.get());
         }
     }
 }

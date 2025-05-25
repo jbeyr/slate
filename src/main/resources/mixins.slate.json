@@ -13,6 +13,7 @@
   ],
   "client": [
     "client.GuiScreenAccessor",
+    "client.KeyBindingAccessor",
     "client.MinecraftAccessor",
     "client.MixinMinecraft",
     "client.MixinMouseHelper",
@@ -21,7 +22,9 @@
     "entity.MixinEntityPlayerSP",
     "entity.MixinEntityRenderer",
     "entity.MixinPlayerControllerMP",
+    "render.ItemRendererAccessor",
     "render.MixinEntityRenderer",
+    "render.MixinItemRenderer",
     "render.RenderManagerAccessor"
   ]
 }

@@ -1,10 +1,7 @@
 package slate.module;
 
 import slate.module.impl.client.*;
-import slate.module.impl.combat.AimAssist;
-import slate.module.impl.combat.AutoClicker;
-import slate.module.impl.combat.Backtrack;
-import slate.module.impl.combat.BlockHit;
+import slate.module.impl.combat.*;
 import slate.module.impl.minigames.BedWars;
 import slate.module.impl.movement.BridgeAssist;
 import slate.module.impl.movement.Sprint;
@@ -41,6 +38,13 @@ public class ModuleManager {
     public static CustomFOV customFOV;
     public static Chams chams;
     public static Particles particles;
+    public static Pointers pointers;
+    public static Indicators indicators;
+    public static Animations animations;
+    public static BreakProgress breakProgress;
+    public static AntiShuffle antiShuffle;
+    public static Potions potions;
+    public static ItemESP itemESP;
 
     public static AntiBot antiBot;
     public static TargetManager targetManager;
@@ -54,6 +58,7 @@ public class ModuleManager {
     public static AimAssist aimAssist;
     public static BlockHit blockHit;
     public static Backtrack backtrack;
+    public static MoreKB moreKB;
 
     public static Sprint sprint;
     public static BridgeAssist bridgeAssist;
@@ -100,6 +105,13 @@ public class ModuleManager {
         this.addModule(customFOV = new CustomFOV());
         this.addModule(chams = new Chams());
         this.addModule(particles = new Particles());
+        this.addModule(pointers = new Pointers());
+        this.addModule(indicators = new Indicators());
+        this.addModule(animations = new Animations());
+        this.addModule(breakProgress = new BreakProgress());
+        this.addModule(antiShuffle = new AntiShuffle());
+        this.addModule(potions = new Potions());
+        this.addModule(itemESP = new ItemESP());
 
         // world
         this.addModule(antiBot = new AntiBot());
@@ -116,6 +128,7 @@ public class ModuleManager {
         this.addModule(autoClicker = new AutoClicker());
         this.addModule(blockHit = new BlockHit());
         this.addModule(backtrack = new Backtrack());
+        this.addModule(moreKB = new MoreKB());
 
         // movement
         this.addModule(sprint = new Sprint());

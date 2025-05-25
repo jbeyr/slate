@@ -16,9 +16,8 @@ public class Backtrack extends Module {
     private static final int SENSITIVITY = 100; // hard to configure well and if we make this more lax it'll probably ban on prediction anticheats anyway
     @Getter private boolean shouldSpoof = false;
     @Getter private float delayMs;
-
-    private float minRangeSq;
-    private float maxRangeSq;
+    @Getter private float minRangeSq;
+    @Getter private float maxRangeSq;
 
     private final SliderSetting delayMsSlider = new SliderSetting("Delay (ms)", 1, 1, 20, 1);
     private final SliderSetting minRange = new SliderSetting("Min Range", 3.5, 0, 4, 0.02);
@@ -28,6 +27,9 @@ public class Backtrack extends Module {
     public Backtrack() {
         super("Backtrack", category.combat);
         this.registerSetting(delayMsSlider, minRange, maxRange);
+        maxRangeSq = (float) Math.pow(maxRange.getInput(), 2);
+        minRangeSq = (float) Math.pow(minRange.getInput(), 2);
+        delayMs = (float) delayMsSlider.getInput();
     }
 
     @Override

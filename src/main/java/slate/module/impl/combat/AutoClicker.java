@@ -1,11 +1,15 @@
 package slate.module.impl.combat;
 
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraftforge.common.MinecraftForge;
 import slate.event.ClickEvent;
 import slate.event.PreMotionEvent;
+import slate.event.custom.AutoclickerAttackEvent;
 import slate.mixins.impl.client.PlayerControllerMPAccessor;
 import slate.module.impl.combat.autoclicker.*;
 import slate.module.setting.impl.ButtonSetting;
 import slate.module.setting.impl.ModeValue;
+import slate.module.setting.impl.SliderSetting;
 import slate.utility.CoolDown;
 import slate.utility.Utils;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -16,6 +20,7 @@ public class AutoClicker extends IAutoClicker {
     private final ModeValue mode;
     private final ButtonSetting breakBlocks;
     private final ButtonSetting inventoryFill;
+
 
     private final CoolDown coolDown = new CoolDown(100);
 
@@ -75,5 +80,9 @@ public class AutoClicker extends IAutoClicker {
             }
         }
         inventoryClick = false;
+    }
+
+    public void sendAutoclickerAttackEvent(EntityLivingBase target) {
+        MinecraftForge.EVENT_BUS.post(new AutoclickerAttackEvent(target));
     }
 }
