@@ -3,10 +3,14 @@ package slate.module;
 import slate.module.impl.client.*;
 import slate.module.impl.combat.*;
 import slate.module.impl.minigames.BedWars;
+import slate.module.impl.movement.JumpReset;
 import slate.module.impl.movement.BridgeAssist;
 import slate.module.impl.movement.Sprint;
 import slate.module.impl.other.ModSpoofer;
 import slate.module.impl.other.PingSpoofer;
+import slate.module.impl.other.QuickMathsSolver;
+import slate.module.impl.player.AutoDiamondUpgrade;
+import slate.module.impl.player.AutoGhead;
 import slate.module.impl.player.AutoTool;
 import slate.module.impl.player.AutoWeapon;
 import slate.module.impl.render.*;
@@ -53,6 +57,8 @@ public class ModuleManager {
     public static AutoWeapon autoWeapon;
     public static AutoTool autoTool;
     public static FastPlace fastPlace;
+    public static AutoGhead autoGhead;
+    public static AutoDiamondUpgrade autoDiamondUpgrade;
 
     public static AutoClicker autoClicker;
     public static AimAssist aimAssist;
@@ -62,9 +68,11 @@ public class ModuleManager {
 
     public static Sprint sprint;
     public static BridgeAssist bridgeAssist;
+    public static JumpReset jumpReset;
 
     public static ModSpoofer modSpoofer;
     public static PingSpoofer pingSpoofer;
+    public static QuickMathsSolver quickMathsSolver;
 
     public static BedWars bedWars;
 
@@ -122,6 +130,8 @@ public class ModuleManager {
         this.addModule(autoWeapon = new AutoWeapon());
         this.addModule(autoTool = new AutoTool());
         this.addModule(fastPlace = new FastPlace());
+        this.addModule(autoGhead = new AutoGhead());
+        this.addModule(autoDiamondUpgrade = new AutoDiamondUpgrade());
 
         // combat
         this.addModule(aimAssist = new AimAssist());
@@ -133,10 +143,12 @@ public class ModuleManager {
         // movement
         this.addModule(sprint = new Sprint());
         this.addModule(bridgeAssist = new BridgeAssist());
+        this.addModule(jumpReset = new JumpReset());
 
         // other
         this.addModule(modSpoofer = new ModSpoofer());
         this.addModule(pingSpoofer = new PingSpoofer());
+        this.addModule(quickMathsSolver = new QuickMathsSolver());
 
         // minigames
         this.addModule(bedWars = new BedWars());

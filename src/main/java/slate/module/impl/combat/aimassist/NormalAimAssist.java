@@ -15,13 +15,17 @@ import slate.module.ModuleManager;
 import slate.module.impl.combat.AimAssist;
 import slate.module.impl.world.targeting.TargetManager;
 import slate.module.setting.impl.ButtonSetting;
+import slate.module.setting.impl.ModeSetting;
 import slate.module.setting.impl.SliderSetting;
 import slate.module.setting.impl.SubMode;
 import slate.utility.slate.Interpolate;
 import slate.utility.slate.RayUtils;
 import slate.utility.Utils;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 public class NormalAimAssist extends SubMode<AimAssist> {
@@ -40,6 +44,23 @@ public class NormalAimAssist extends SubMode<AimAssist> {
     private final ButtonSetting aimWhileMining = new ButtonSetting("While mining", false);
     private final SliderSetting hurtTimeThreshold = new SliderSetting("Hurt Time Threshold", 0, 0, 10, 1);
 
+    private final SortMode[] sortModes = {
+        new SortMode("Lowest Health", Comparator.comparingDouble(ar -> ar.getTarget().getHealth())),
+        new SortMode("Closest to FOV", Comparator.comparingDouble(this::angleToEntityCrosshairInterpolated)),
+        new SortMode("Nearest Distance", Comparator.comparingDouble(ar -> ar.getTarget().getDistanceSqToEntity(mc.thePlayer)))
+    };
+
+    @Data @AllArgsConstructor
+    private static class SortMode {
+        private final String name;
+        private final Comparator<AimResult> comparator;
+
+        @Override public String toString() {
+            return name;
+        }
+    }
+
+    private final ModeSetting sortMethod = new ModeSetting("Sort", Arrays.stream(sortModes).map(sm -> sm.name).toArray(String[]::new), 0);
     private final ButtonSetting switchTargets = new ButtonSetting("Switch fighters", false);
     private final SliderSetting switchFov     = new SliderSetting("Switch FOV", 60, 1, 180, 1, switchTargets::isToggled);
 
@@ -59,7 +80,7 @@ public class NormalAimAssist extends SubMode<AimAssist> {
 
     public NormalAimAssist(String name, @NotNull AimAssist parent) {
         super(name, parent);
-        this.registerSetting(maxRange, minRange, fov, strength, yOffset, samples, clickAim, aimWhileMining, hurtTimeThreshold, switchTargets, switchFov);
+        this.registerSetting(maxRange, minRange, fov, strength, yOffset, samples, clickAim, aimWhileMining, hurtTimeThreshold, sortMethod, switchTargets, switchFov);
     }
 
     @Override
@@ -269,9 +290,7 @@ public class NormalAimAssist extends SubMode<AimAssist> {
                 //  NEW – fov parameter now passed in from caller (normal or switch-FOV)
                 .filter(ar -> isWithinFOVInterpolated(fovCone, partialTicks, ar.getAimVec()))
                 .limit(5)
-                .min((a1, a2) -> Double.compare(
-                        angleToEntityCrosshairInterpolated(partialTicks, a1),
-                        angleToEntityCrosshairInterpolated(partialTicks, a2)));
+                .min(sortModes[(int)sortMethod.getInput()].comparator);
     }
 
     private Optional<AimResult> findBestPotentialTarget(float partialTicks) {
@@ -282,6 +301,7 @@ public class NormalAimAssist extends SubMode<AimAssist> {
     private static class AimResult {
         private Vec3 aimVec;
         private EntityLivingBase target;
+        private float partialTicks;
     }
 
     private Optional<AimResult> viableAimPointForEntity(Entity entity, float partialTicks) {
@@ -298,7 +318,7 @@ public class NormalAimAssist extends SubMode<AimAssist> {
             res = RayUtils.nearestVisiblePointOnHitboxFromMyEyes(target, partialTicks, (int)samples.getInput());
         }
 
-        return res.map(vec3 -> new AimResult(vec3, target));
+        return res.map(vec3 -> new AimResult(vec3, target, partialTicks));
     }
 
     private boolean isWithinFOVInterpolated(float fovVal, float partialTicks, Vec3 viableAimPoint) {
@@ -327,14 +347,14 @@ public class NormalAimAssist extends SubMode<AimAssist> {
     }
 
 
-    private float angleToEntityCrosshairInterpolated(float partialTicks, AimResult ar) {
+    private float angleToEntityCrosshairInterpolated(AimResult ar) {
         if (mc.thePlayer == null) return Float.MAX_VALUE;
 
-        Vec3 playerEyePos = Interpolate.interpolatedPosEyes(partialTicks);
+        Vec3 playerEyePos = Interpolate.interpolatedPosEyes(ar.partialTicks);
         if (playerEyePos == null) return Float.MAX_VALUE;
 
-        float playerViewYaw = mc.thePlayer.prevRotationYaw + (mc.thePlayer.rotationYaw - mc.thePlayer.prevRotationYaw) * partialTicks;
-        float playerViewPitch = mc.thePlayer.prevRotationPitch + (mc.thePlayer.rotationPitch - mc.thePlayer.prevRotationPitch) * partialTicks;
+        float playerViewYaw = mc.thePlayer.prevRotationYaw + (mc.thePlayer.rotationYaw - mc.thePlayer.prevRotationYaw) * ar.partialTicks;
+        float playerViewPitch = mc.thePlayer.prevRotationPitch + (mc.thePlayer.rotationPitch - mc.thePlayer.prevRotationPitch) * ar.partialTicks;
 
         Vec3 targetPointToUse = ar.getAimVec();
         double dx = targetPointToUse.xCoord - playerEyePos.xCoord;

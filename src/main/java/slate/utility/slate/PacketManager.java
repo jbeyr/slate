@@ -35,11 +35,11 @@ public class PacketManager {
 
     // TODO refactor target to use Optional
     @Getter private static EntityPlayer target;
-    private static Vec3 currTickTargetPos = null;
-    private static Vec3 prevTickTargetPos = null;
+    @Getter private static Vec3 currTickTargetPos = null;
+    @Getter private static Vec3 prevTickTargetPos = null;
 
-    private static long prevTickTargetTime;
-    private static long currTickTargetTime;
+    @Getter private static long prevTickTargetTime;
+    @Getter private static long currTickTargetTime;
 
 
     public static Optional<AxisAlignedBB> getTargetBox() {
@@ -103,12 +103,12 @@ public class PacketManager {
                 }
             }
 
-            if (bt.isEnabled()) {
-                if (bt.isShouldSpoof()) {
+            if (bt.isEnabled() && bt.isShouldSpoof()) {
                     return true;
-                }
             }
-            if (ps.isEnabled()) {
+
+            // only run ping spoofer when backtrack isn't flushing
+            if (!bt.isShouldSpoof() && ps.isEnabled()) {
                 return true;
             }
 
@@ -142,6 +142,22 @@ public class PacketManager {
         }
     }
 
+    /**
+     * Flush everything in the inbound queue immediately, IGNORING PingSpoofer.
+     * Used by Backtrack when it stops spoofing so the client won't hitch.
+     */
+    public static void forceFlushInboundQueue() {
+        for (DelayedPacket<?> dp : inboundPacketsQueue) {
+            try {
+                Packet p = dp.getPacket();
+                p.processPacket(mc.thePlayer.sendQueue.getNetworkManager().getNetHandler());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        inboundPacketsQueue.clear();
+    }
+
     public static void sendWholeOutboundQueue() {
         for (DelayedPacket packet : outboundPacketsQueue) {
             try {
@@ -172,38 +188,11 @@ public class PacketManager {
                 S48PacketResourcePackSend || packet instanceof S49PacketUpdateEntityNBT;
     }
 
-    // TODO render true target position on backtrack
-    @SubscribeEvent
-    public void r1(RenderWorldLastEvent e) {
-       if (Utils.nullCheckPasses()) {
-           Backtrack bt = ModuleManager.backtrack;
-
-           if (bt.isEnabled() && target != null && currTickTargetPos != null && prevTickTargetPos != null) {
-               double dSq = mc.thePlayer.getDistanceSqToEntity(target);
-               if(!(bt.getMinRangeSq() <= dSq && dSq <= bt.getMaxRangeSq())) return;
-               long currentTime = System.currentTimeMillis();
-               long timeSinceLastUpdate = currentTime - currTickTargetTime;
-               long updateInterval = currTickTargetTime - prevTickTargetTime;
-               float targetPartialTicks = (float) timeSinceLastUpdate / updateInterval;
-
-               SlantRenderUtils.draw3dEntityESP(target, e.partialTicks, 0, 0, .5f, 0.7f);
-               // LagUtils.drawTrueBacktrackHitbox(prevTickTargetPos, currTickTargetPos, targetPartialTicks, e.partialTicks, .3f, .7f, .3f, 1f);
-           }
-       }
+    public static void setTarget(Optional<EntityPlayer> t) {
+        setNewTarget(Optional.ofNullable(getTarget()), t);
     }
 
-
-    @SubscribeEvent
-    public void onPlayerAttackedByMe(AttackEntityEvent e) {
-        if (e.entityPlayer != mc.thePlayer) return;
-        TargetManager tm = ModuleManager.targetManager;
-
-        if (e.target instanceof EntityPlayer && tm.isRecommendedTarget((EntityLivingBase) e.target)) {
-            setNewTarget(Optional.ofNullable(target), Optional.of((EntityPlayer) e.target));
-        }
-    }
-
-    public void setNewTarget(Optional<EntityPlayer> oldTarget, Optional<EntityPlayer> newTarget) {
+    public static void setNewTarget(Optional<EntityPlayer> oldTarget, Optional<EntityPlayer> newTarget) {
         Backtrack bt = ModuleManager.backtrack;
         PingSpoofer ps = ModuleManager.pingSpoofer;
 
@@ -261,6 +250,7 @@ public class PacketManager {
         public final Packet<T> packet;
         public final GenericFutureListener<? extends Future<? super Void>>[] futureListeners;
 
+        @SafeVarargs
         public InboundHandlerTuplePacketListener(Packet<T> p_i45146_1_, GenericFutureListener<? extends Future<? super Void>>... p_i45146_2_) {
             this.packet = p_i45146_1_;
             this.futureListeners = p_i45146_2_;

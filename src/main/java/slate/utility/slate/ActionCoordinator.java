@@ -2,6 +2,7 @@ package slate.utility.slate;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.MovingObjectPosition;
+import slate.module.impl.player.AutoGhead;
 
 public class ActionCoordinator {
     public static boolean isActingOnPlayerBehalfAllowed() {
@@ -11,7 +12,7 @@ public class ActionCoordinator {
 
     public static boolean isClickAllowed() {
         Minecraft mc = Minecraft.getMinecraft();
-        return isActingOnPlayerBehalfAllowed() && !mc.thePlayer.isUsingItem();
+        return isActingOnPlayerBehalfAllowed() && !mc.thePlayer.isUsingItem() && !AutoGhead.isInProgress();
     }
 
     public static boolean isHotbarSelectedSlotChangeAllowed() {
@@ -26,5 +27,8 @@ public class ActionCoordinator {
         return isActingOnPlayerBehalfAllowed();
     }
 
+    public static boolean isGheadAllowed() {
+        return isActingOnPlayerBehalfAllowed();
+    }
 
 }

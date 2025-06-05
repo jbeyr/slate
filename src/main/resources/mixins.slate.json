@@ -9,7 +9,8 @@
     "entity.EntityPlayerAccessor",
     "entity.MixinEntityLivingBase",
     "entity.MixinEntityPlayer",
-    "network.MixinModList"
+    "network.MixinModList",
+    "network.MixinNetworkManager"
   ],
   "client": [
     "client.GuiScreenAccessor",
@@ -17,6 +18,7 @@
     "client.MinecraftAccessor",
     "client.MixinMinecraft",
     "client.MixinMouseHelper",
+    "client.MixinNetHandlerPlayClient",
     "client.PlayerControllerMPAccessor",
     "entity.EntityPlayerSPAccessor",
     "entity.MixinEntityPlayerSP",

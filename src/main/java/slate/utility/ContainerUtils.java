@@ -1,6 +1,7 @@
 package slate.utility;
 
 import net.minecraft.block.*;
+import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.init.Blocks;
