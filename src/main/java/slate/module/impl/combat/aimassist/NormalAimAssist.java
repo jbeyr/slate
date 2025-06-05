@@ -25,7 +25,6 @@ import slate.utility.Utils;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 public class NormalAimAssist extends SubMode<AimAssist> {
@@ -61,8 +60,9 @@ public class NormalAimAssist extends SubMode<AimAssist> {
     }
 
     private final ModeSetting sortMethod = new ModeSetting("Sort", Arrays.stream(sortModes).map(sm -> sm.name).toArray(String[]::new), 0);
-    private final ButtonSetting switchTargets = new ButtonSetting("Switch fighters", false);
-    private final SliderSetting switchFov     = new SliderSetting("Switch FOV", 60, 1, 180, 1, switchTargets::isToggled);
+    private final ButtonSetting switchIfMoreDesirableTarget = new ButtonSetting("Switch if better target", false);
+    private final ButtonSetting switchTargetsOnHit = new ButtonSetting("Switch targets on hit", false);
+    private final SliderSetting switchFov = new SliderSetting("Switch FOV", 60, 1, 180, 1, switchTargetsOnHit::isToggled);
 
     // for smoothing/accumulation
     private float accumulatedMouseDX = 0.0f;
@@ -80,7 +80,7 @@ public class NormalAimAssist extends SubMode<AimAssist> {
 
     public NormalAimAssist(String name, @NotNull AimAssist parent) {
         super(name, parent);
-        this.registerSetting(maxRange, minRange, fov, strength, yOffset, samples, clickAim, aimWhileMining, hurtTimeThreshold, sortMethod, switchTargets, switchFov);
+        this.registerSetting(maxRange, minRange, fov, strength, yOffset, samples, clickAim, aimWhileMining, hurtTimeThreshold, sortMethod, switchIfMoreDesirableTarget, switchTargetsOnHit, switchFov);
     }
 
     @Override
@@ -146,13 +146,12 @@ public class NormalAimAssist extends SubMode<AimAssist> {
         if (shouldAimThisFrame) {
 
             /* 0) ───── throw away invalid target ───── */
-            if (currentTarget.isPresent() &&
-                    !isTargetStillValid(currentTarget.get(), partialTicks)) {
+            if (currentTarget.isPresent() && !isTargetStillValid(currentTarget.get(), partialTicks)) {
                 currentTarget = Optional.empty();
             }
 
             /* 1) ───── perform swap requested by the autoclicker ───── */
-            if (pendingSwitch) {
+            if (pendingSwitch || switchIfMoreDesirableTarget.isToggled()) {
 
                 Optional<AimResult> newTarget = findBestPotentialTarget(
                         partialTicks,
@@ -263,7 +262,7 @@ public class NormalAimAssist extends SubMode<AimAssist> {
 
     @SubscribeEvent
     public void onAutoClickerAttack(slate.event.custom.AutoclickerAttackEvent e) {
-        if (!switchTargets.isToggled()) return;               // feature off?
+        if (!switchTargetsOnHit.isToggled()) return;               // feature off?
         if (!(e.getAttacked() instanceof EntityLivingBase)) return;
         pendingSwitch = true;                                 // request swap
         switchExclude = (EntityLivingBase) e.getAttacked();   // don’t retarget same entity
@@ -287,7 +286,6 @@ public class NormalAimAssist extends SubMode<AimAssist> {
                 })
                 .map(entity -> viableAimPointForEntity(entity, partialTicks))
                 .flatMap(opt -> opt.map(Stream::of).orElseGet(Stream::empty))
-                //  NEW – fov parameter now passed in from caller (normal or switch-FOV)
                 .filter(ar -> isWithinFOVInterpolated(fovCone, partialTicks, ar.getAimVec()))
                 .limit(5)
                 .min(sortModes[(int)sortMethod.getInput()].comparator);

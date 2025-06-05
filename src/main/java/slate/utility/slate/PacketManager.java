@@ -24,11 +24,13 @@ import slate.utility.Utils;
 
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PacketManager {
 
     public static Minecraft mc = Main.mc;
 
+    private static final AtomicBoolean hardFlushing = new AtomicBoolean(false);
     // TODO public static state for packet management probably isn't a good idea
     public static ConcurrentLinkedQueue<DelayedPacket<? extends INetHandler>> inboundPacketsQueue = new ConcurrentLinkedQueue<>();
     public static ConcurrentLinkedQueue<DelayedPacket<? extends INetHandler>> outboundPacketsQueue = new ConcurrentLinkedQueue<>();
@@ -71,6 +73,10 @@ public class PacketManager {
         Backtrack bt = ModuleManager.backtrack;
         PingSpoofer ps = ModuleManager.pingSpoofer;
 
+        if (hardFlushing.get()) {
+            return false;
+        }
+
         if (isPlayClientPacket(p) && Utils.nullCheckPasses()) {
             if (bt.isEnabled()) {
                 if (p instanceof S18PacketEntityTeleport) {
@@ -104,7 +110,7 @@ public class PacketManager {
             }
 
             if (bt.isEnabled() && bt.isShouldSpoof()) {
-                    return true;
+                return true;
             }
 
             // only run ping spoofer when backtrack isn't flushing
@@ -147,15 +153,20 @@ public class PacketManager {
      * Used by Backtrack when it stops spoofing so the client won't hitch.
      */
     public static void forceFlushInboundQueue() {
-        for (DelayedPacket<?> dp : inboundPacketsQueue) {
-            try {
-                Packet p = dp.getPacket();
-                p.processPacket(mc.thePlayer.sendQueue.getNetworkManager().getNetHandler());
-            } catch (Exception e) {
-                e.printStackTrace();
+        // setAndGet makes the write visible *before* we continue
+        if (!hardFlushing.compareAndSet(false, true)) return; // already flushing
+
+        try {
+            for (;;) {
+                DelayedPacket dp = inboundPacketsQueue.poll();  // atomic poll
+                if (dp == null) break;                             // queue empty
+                try {
+                    dp.getPacket().processPacket(mc.thePlayer.sendQueue.getNetworkManager().getNetHandler());
+                } catch (Exception e) { e.printStackTrace(); }
             }
+        } finally {
+            hardFlushing.set(false);
         }
-        inboundPacketsQueue.clear();
     }
 
     public static void sendWholeOutboundQueue() {
@@ -205,43 +216,35 @@ public class PacketManager {
     @SubscribeEvent
     public void onTick(TickEvent.ClientTickEvent e) {
         if (Utils.nullCheckPasses() && e.phase == TickEvent.Phase.START) {
-            Backtrack bt = ModuleManager.backtrack;
+
+            Backtrack   bt = ModuleManager.backtrack;
             PingSpoofer ps = ModuleManager.pingSpoofer;
 
             if (bt.isEnabled()) {
                 bt.tickCheck();
-                for (DelayedPacket packet : inboundPacketsQueue) {
-                    if (System.currentTimeMillis() > packet.getTime() + bt.getDelayMs() + (ps.isEnabled() ? ps.getDelayMs() : 0)) {
-                        try {
-                            Packet p = packet.getPacket();
-                            if (p instanceof S3EPacketTeams) {
-                                if (((S3EPacketTeams) p).getPlayers() != null) {
-                                    p.processPacket(mc.thePlayer.sendQueue.getNetworkManager().getNetHandler());
-                                }
-                            } else if (p instanceof S0CPacketSpawnPlayer) {
-                                if (((S0CPacketSpawnPlayer) p).getPlayer() != null) {
-                                    p.processPacket(mc.thePlayer.sendQueue.getNetworkManager().getNetHandler());
-                                }
 
-                            } else if (p instanceof S3BPacketScoreboardObjective) {
-                                if (((S3BPacketScoreboardObjective) p).func_149337_d() != null) {
-                                    p.processPacket(mc.thePlayer.sendQueue.getNetworkManager().getNetHandler());
-                                }
-                            } else {
-                                p.processPacket(mc.thePlayer.sendQueue.getNetworkManager().getNetHandler());
-                            }
-                        } catch (Exception exception) {
-                            exception.printStackTrace();
-                        }
-                        inboundPacketsQueue.remove(packet);
+                long now = System.currentTimeMillis();
+                for (DelayedPacket dp : PacketManager.inboundPacketsQueue) {
+
+                    long effectiveDelay = 0;            // <-- NEW
+                    if (bt.isShouldSpoof())         // add Back-track delay
+                        effectiveDelay += bt.getDelayMs();
+
+                    if (ps.isEnabled())             // add Ping-Spoofer delay
+                        effectiveDelay += ps.getDelayMs();
+
+                    if (now > dp.getTime() + effectiveDelay) {
+                        try {
+                            dp.getPacket().processPacket(mc.thePlayer.sendQueue.getNetworkManager().getNetHandler());
+                        } catch (Exception ex) { ex.printStackTrace(); }
+                        PacketManager.inboundPacketsQueue.remove(dp);
                     }
                 }
             }
 
-            if (ps.isEnabled()) {
-                if (!bt.isShouldSpoof()) {
-                    ps.tickCheck();
-                }
+            /* PingSpoofer tick still runs only when Back-track is not spoofing */
+            if (ps.isEnabled() && !bt.isShouldSpoof()) {
+                ps.tickCheck();
             }
         }
     }

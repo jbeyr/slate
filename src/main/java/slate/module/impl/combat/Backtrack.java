@@ -125,14 +125,14 @@ public class Backtrack extends Module {
         // stop if too close
         if (dSq < minRangeSq) {
             shouldSpoof = false;
-            PacketManager.processWholePacketQueue();
+            PacketManager.forceFlushInboundQueue();
             return;
         }
 
         // stop if too far
         if (dSq > maxRangeSq) {
             shouldSpoof = false;
-            PacketManager.processWholePacketQueue();
+            PacketManager.forceFlushInboundQueue();
             return;
         }
 
