@@ -1,6 +1,6 @@
 package slate.module.impl.render;
 
-import slate.event.ReceivePacketEvent;
+import slate.event.custom.PacketEvent;
 import slate.module.Module;
 import slate.module.setting.impl.ButtonSetting;
 import slate.module.setting.impl.DescriptionSetting;
@@ -20,7 +20,7 @@ public class NoHurtCam extends Module {
     }
 
     @SubscribeEvent
-    public void onReceivePacket(ReceivePacketEvent event) {
+    public void onReceivePacket(PacketEvent.Receive event) {
         if (noHurtAnimation.isToggled() && event.getPacket() instanceof S0BPacketAnimation) {
             S0BPacketAnimation packet = (S0BPacketAnimation) event.getPacket();
 

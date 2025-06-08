@@ -6,7 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.util.Vec3;
 import slate.Main;
-import slate.event.SendPacketEvent;
+import slate.event.custom.PacketEvent;
 import slate.module.Module;
 import slate.module.ModuleManager;
 // import slate.module.impl.render.Freecam;
@@ -145,7 +145,7 @@ public class AntiBot extends Module {
     }
 
     @SubscribeEvent
-    public void onSendPacket(SendPacketEvent event) {
+    public void onSendPacket(PacketEvent.Send event) {
         if (cancelBotHit.isToggled() && event.getPacket() instanceof C02PacketUseEntity) {
             C02PacketUseEntity packet = (C02PacketUseEntity) event.getPacket();
             if (packet.getAction() == C02PacketUseEntity.Action.ATTACK) {

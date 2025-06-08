@@ -1,19 +1,15 @@
 package slate.module.impl.movement;
 
 import slate.event.JumpEvent;
-import slate.event.PrePlayerInputEvent;
-import slate.event.PreUpdateEvent;
+import slate.event.pre.PrePlayerInputEvent;
 import slate.module.Module;
-import slate.module.ModuleManager;
 // import slate.module.impl.combat.KillAura;
 // import slate.module.impl.other.anticheats.utils.world.PlayerRotation;
 import slate.module.setting.impl.ButtonSetting;
 import slate.module.setting.impl.SliderSetting;
 // import slate.script.classes.Vec3;
 // import slate.utility.BlockUtils;
-import slate.utility.MoveUtil;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.util.MathHelper;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 

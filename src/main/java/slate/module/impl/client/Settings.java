@@ -1,7 +1,7 @@
 package slate.module.impl.client;
 
 import slate.Main;
-import slate.event.PreTickEvent;
+import slate.event.pre.PreTickEvent;
 import slate.mixins.impl.client.MinecraftAccessor;
 import slate.module.Module;
 import slate.module.setting.impl.ButtonSetting;

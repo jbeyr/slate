@@ -1,6 +1,9 @@
 package slate.module.impl.render;
 
 import slate.event.*;
+import slate.event.custom.PacketEvent;
+import slate.event.pre.PreMotionEvent;
+import slate.event.pre.PreUpdateEvent;
 import slate.mixins.impl.render.ItemRendererAccessor;
 import slate.module.Module;
 import slate.module.impl.other.SlotHandler;
@@ -78,7 +81,7 @@ public class Animations extends Module {
     }
 
     @SubscribeEvent
-    public void onSendPacket(SendPacketEvent event) {
+    public void onSendPacket(PacketEvent.Send event) {
         if (Utils.nullCheckPasses()
                 && swingWhileDigging.isToggled()
                 && clientSide.isToggled()

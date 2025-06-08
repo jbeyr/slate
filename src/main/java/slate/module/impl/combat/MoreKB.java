@@ -1,7 +1,7 @@
 package slate.module.impl.combat;
 
 import slate.event.MoveInputEvent;
-import slate.event.PreMotionEvent;
+import slate.event.pre.PreMotionEvent;
 import slate.event.SprintEvent;
 import slate.mixins.impl.client.KeyBindingAccessor;
 import slate.module.impl.combat.morekb.IMoreKB;

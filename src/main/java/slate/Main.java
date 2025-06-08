@@ -16,7 +16,6 @@ import slate.utility.Reflection;
 import slate.utility.Utils;
 import slate.utility.profile.Profile;
 import slate.utility.profile.ProfileManager;
-import slate.utility.slate.PacketManager;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -48,7 +47,6 @@ public class Main
     public void init(FMLInitializationEvent ignored) {
         Runtime.getRuntime().addShutdownHook(new Thread(ex::shutdown));
         MinecraftForge.EVENT_BUS.register(this);
-        MinecraftForge.EVENT_BUS.register(new PacketManager());
         // MinecraftForge.EVENT_BUS.register(new DebugInfoRenderer());
         // MinecraftForge.EVENT_BUS.register(new CPSCalculator());
         // MinecraftForge.EVENT_BUS.register(new Ping());

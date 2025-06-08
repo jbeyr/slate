@@ -1,6 +1,6 @@
 package slate.module.impl.other;
 
-import slate.event.PreUpdateEvent;
+import slate.event.pre.PreUpdateEvent;
 import slate.mixins.impl.client.PlayerControllerMPAccessor;
 import slate.module.Module;
 import slate.module.setting.impl.ModeSetting;

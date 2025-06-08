@@ -1,12 +1,15 @@
 package slate.utility.slate;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import net.minecraft.network.INetHandler;
+import lombok.RequiredArgsConstructor;
 import net.minecraft.network.Packet;
 
-@Getter @AllArgsConstructor
-public class DelayedPacket<T extends INetHandler> {
-    private final Packet<T> packet;
-    private final long time;
+/**
+ * A container holding a packet and the timestamp of its interception.
+ */
+@Getter
+@RequiredArgsConstructor
+public class DelayedPacket {
+    private final Packet<?> packet;
+    private final long timestamp;
 }

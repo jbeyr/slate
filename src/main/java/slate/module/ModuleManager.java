@@ -2,17 +2,14 @@ package slate.module;
 
 import slate.module.impl.client.*;
 import slate.module.impl.combat.*;
+import slate.module.impl.combat.Backtrack;
 import slate.module.impl.minigames.BedWars;
 import slate.module.impl.movement.JumpReset;
 import slate.module.impl.movement.BridgeAssist;
 import slate.module.impl.movement.Sprint;
-import slate.module.impl.other.ModSpoofer;
-import slate.module.impl.other.PingSpoofer;
-import slate.module.impl.other.QuickMathsSolver;
-import slate.module.impl.player.AutoDiamondUpgrade;
-import slate.module.impl.player.AutoGhead;
-import slate.module.impl.player.AutoTool;
-import slate.module.impl.player.AutoWeapon;
+import slate.module.impl.other.*;
+import slate.module.impl.minigames.QuickMathsSolver;
+import slate.module.impl.player.*;
 import slate.module.impl.render.*;
 import org.jetbrains.annotations.NotNull;
 import slate.module.impl.world.DelayRemover;
@@ -71,9 +68,8 @@ public class ModuleManager {
     public static JumpReset jumpReset;
 
     public static ModSpoofer modSpoofer;
-    public static PingSpoofer pingSpoofer;
-    public static QuickMathsSolver quickMathsSolver;
 
+    public static QuickMathsSolver quickMathsSolver;
     public static BedWars bedWars;
 
     static List<Module> modules = new ArrayList<>();
@@ -147,10 +143,9 @@ public class ModuleManager {
 
         // other
         this.addModule(modSpoofer = new ModSpoofer());
-        this.addModule(pingSpoofer = new PingSpoofer());
-        this.addModule(quickMathsSolver = new QuickMathsSolver());
 
         // minigames
+        this.addModule(quickMathsSolver = new QuickMathsSolver());
         this.addModule(bedWars = new BedWars());
 
         // enable

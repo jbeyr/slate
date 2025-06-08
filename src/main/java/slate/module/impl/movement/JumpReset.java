@@ -7,7 +7,7 @@ import net.minecraft.network.play.server.S12PacketEntityVelocity;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.commons.lang3.RandomUtils;
 import org.lwjgl.input.Keyboard;
-import slate.event.ReceivePacketEvent;
+import slate.event.custom.PacketEvent;
 import slate.module.Module;
 import slate.module.setting.impl.DescriptionSetting;
 import slate.module.setting.impl.SliderSetting;
@@ -55,7 +55,7 @@ public class JumpReset extends Module {
     }
 
     @SubscribeEvent
-    public void onPacket(ReceivePacketEvent e) {
+    public void onPacket(PacketEvent.Receive e) {
         if (e.getPacket() instanceof S12PacketEntityVelocity) {
             if (chance.getInput() != 100.0D) {
                 double ch = Math.random() * 100;

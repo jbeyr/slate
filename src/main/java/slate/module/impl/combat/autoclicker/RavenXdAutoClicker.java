@@ -1,6 +1,6 @@
 package slate.module.impl.combat.autoclicker;
 
-import slate.event.PreMotionEvent;
+import slate.event.pre.PreMotionEvent;
 import slate.module.setting.impl.ButtonSetting;
 import slate.module.setting.impl.SliderSetting;
 import slate.module.setting.impl.SubMode;
