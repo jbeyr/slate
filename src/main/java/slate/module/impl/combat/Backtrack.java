@@ -12,6 +12,7 @@ import net.minecraft.network.play.server.S0BPacketAnimation;
 import net.minecraft.network.play.server.S12PacketEntityVelocity;
 import net.minecraft.network.play.server.S14PacketEntity;
 import net.minecraft.network.play.server.S18PacketEntityTeleport;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
@@ -36,41 +37,58 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class Backtrack extends Module {
 
     // region Settings
-    private final SliderSetting maxDelay = new SliderSetting("Max Delay (ms)", 50, 1, 500, 1);
-    private final SliderSetting minRange = new SliderSetting("Min Range", 3.0, 0.1, 6.0, 0.1);
-    private final SliderSetting maxRange = new SliderSetting("Max Range", 4.5, 3.0, 6.0, 0.1);
+    private final SliderSetting baseDelay = new SliderSetting("Base Delay (ms)", 0, 0, 200, 1);
+    private final SliderSetting maxDynamicDelay = new SliderSetting("Max Dynamic Delay (ms)", 0, 0, 100, 1);
+    private final SliderSetting maxOutboundHoldTime = new SliderSetting("Max Outbound Hold (ms)", 300, 50, 1000, 5);
+    private final SliderSetting minRange = new SliderSetting("Min Range", 1.35, 0, 6.0, 0.02);
+    private final SliderSetting maxRange = new SliderSetting("Max Range", 3.7, 3.0, 6.0, 0.02);
+    private final SliderSetting maxTargetRange = new SliderSetting("Max Target Range", 5, 3.0, 10.0, 0.05);
     private final ButtonSetting disableIfHit = new ButtonSetting("Disable if hit", true);
-
     private final ButtonSetting allPackets = new ButtonSetting("All Packets", true);
     private final ButtonSetting forMovePackets = new ButtonSetting("Move Packets", true, () -> !allPackets.isToggled());
     private final ButtonSetting forAttackPackets = new ButtonSetting("Attack Packets", false, () -> !allPackets.isToggled());
+    private final ButtonSetting showHitboxButton = new ButtonSetting("Show Hitbox", false);
+    private final ButtonSetting showGhostButton = new ButtonSetting("Show Ghost", true);
 
-    // settings moved from NetworkHandler
-    private final ButtonSetting showTruePositionsButton = new ButtonSetting("Show true positions", true);
+    private final SliderSetting hitboxRed = new SliderSetting("Hitbox: red", 1, 0, 1, 0.01, showHitboxButton::isToggled);
+    private final SliderSetting hitboxGreen = new SliderSetting("Hitbox: green", 1, 0, 1, 0.01, showHitboxButton::isToggled);
+    private final SliderSetting hitboxBlue = new SliderSetting("Hitbox: blue", 1, 0, 1, 0.01, showHitboxButton::isToggled);
+    private final SliderSetting hitboxAlpha = new SliderSetting("Hitbox: alpha", 1, 0, 1, 0.01, showHitboxButton::isToggled);
+    private final SliderSetting hitboxFillMult = new SliderSetting("Hitbox: fill mult.", 0.25, 0, 1, 0.01, showHitboxButton::isToggled);
+
+    private final SliderSetting ghostRed = new SliderSetting("Ghost: red", 1, 0, 1, 0.01, showGhostButton::isToggled);
+    private final SliderSetting ghostGreen = new SliderSetting("Ghost: green", 1, 0, 1, 0.01, showGhostButton::isToggled);
+    private final SliderSetting ghostBlue = new SliderSetting("Ghost: blue", 1, 0, 1, 0.01, showGhostButton::isToggled);
+    private final SliderSetting ghostAlpha = new SliderSetting("Ghost: alpha", 1, 0, 1, 0.01, showGhostButton::isToggled);
     // endregion
+
+    private double maxTargetRangeSq;
 
     // region State
     private final Queue<Packet<?>> heldPackets = new ConcurrentLinkedQueue<>();
     private Optional<Vec3> lastSentPosition = Optional.empty();
     private boolean isActivelyHolding = false;
     private long holdStartTime = 0;
-
     private Optional<EntityPlayer> currentTarget = Optional.empty();
     private Optional<Vec3> truePosition = Optional.empty();
     private Optional<Vec3> lastTruePosition = Optional.empty();
-    private Optional<Vec3> visualPosition = Optional.empty(); // for rendering
+    private Optional<Vec3> visualPosition = Optional.empty();
     // endregion
 
     public Backtrack() {
         super("Backtrack", category.combat);
         this.registerSetting(new DescriptionSetting("Delays packets to gain an advantage."));
-        this.registerSetting(maxDelay, minRange, maxRange, disableIfHit, allPackets, forMovePackets, forAttackPackets, showTruePositionsButton);
+        this.registerSetting(baseDelay, maxDynamicDelay, maxOutboundHoldTime, minRange, maxRange, maxTargetRange, disableIfHit, allPackets, forMovePackets, forAttackPackets, showHitboxButton, showGhostButton,
+                hitboxRed,hitboxBlue,hitboxGreen,hitboxAlpha,hitboxFillMult,
+                ghostRed,ghostBlue,ghostGreen,ghostAlpha);
     }
 
     @Override
     public void guiUpdate() throws Throwable {
         super.guiUpdate();
         Utils.correctValue(minRange, maxRange);
+        Utils.correctValue(maxRange, maxTargetRange);
+        maxTargetRangeSq = Math.pow(maxTargetRange.getInput(), 2);
     }
 
     @Override
@@ -84,7 +102,7 @@ public class Backtrack extends Module {
     // region Event Handling
     @SubscribeEvent
     public void onAttack(AttackEntityEvent event) {
-        if (!this.isEnabled()) return;
+        if (!this.isEnabled() || !(mc.getNetHandler() instanceof NetHandlerPlayClient)) return;
         if (event.entityPlayer == mc.thePlayer && event.target instanceof EntityPlayer) {
             setTarget((EntityPlayer) event.target);
         }
@@ -93,24 +111,30 @@ public class Backtrack extends Module {
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !Utils.nullCheckPasses()) return;
-
         if (!this.isEnabled()) {
             if (isActivelyHolding) flushHeldPackets();
-            if (currentTarget.isPresent()) setTarget(null); // clear target if disabled
+            if (currentTarget.isPresent()) setTarget(null);
             return;
         }
-
         validateCurrentTarget();
-        PacketInterceptionManager.processInboundQueue(maxDelay.getInput());
 
-        if (isActivelyHolding && System.currentTimeMillis() - holdStartTime > maxDelay.getInput()) {
+        // ** THE FIX: Calculate total delay by adding base and dynamic components **
+        double dynamicDelay = calculateDynamicDelay();
+        double totalDelay = baseDelay.getInput() + dynamicDelay;
+        PacketInterceptionManager.processInboundQueue(totalDelay);
+
+        // the maxOutboundHoldTime setting is for the outbound packet hold time
+        if (isActivelyHolding && System.currentTimeMillis() - holdStartTime > maxOutboundHoldTime.getInput()) {
             flushHeldPackets();
         }
     }
 
     @SubscribeEvent
     public void onPacketSend(PacketEvent.Send event) {
-        if (!this.isEnabled() || !(mc.getNetHandler() instanceof NetHandlerPlayClient)) return;
+        if (!this.isEnabled() || !(mc.getNetHandler() instanceof NetHandlerPlayClient)) {
+            if (!heldPackets.isEmpty()) flushHeldPackets();
+            return;
+        }
         if (event.getPacket() instanceof C03PacketPlayer) {
             handlePlayerPacket((C03PacketPlayer) event.getPacket());
             event.setCanceled(true);
@@ -120,15 +144,12 @@ public class Backtrack extends Module {
     @SubscribeEvent
     public void onPacketReceive(PacketEvent.Receive event) {
         if (!this.isEnabled() || !(mc.getNetHandler() instanceof NetHandlerPlayClient)) return;
-
         updateTruePositionFromPacket(event.getPacket());
-
         if (isActivelyHolding && disableIfHit.isToggled() && event.getPacket() instanceof S12PacketEntityVelocity) {
             if (((S12PacketEntityVelocity) event.getPacket()).getEntityID() == mc.thePlayer.getEntityId()) {
                 flushHeldPackets();
             }
         }
-
         boolean shouldDelay = false;
         if (allPackets.isToggled()) {
             shouldDelay = true;
@@ -150,20 +171,23 @@ public class Backtrack extends Module {
     }
     // endregion
 
-    // region Rendering Logic (Moved from NetworkHandler)
+    // region Rendering Logic
     @SubscribeEvent
     public void onRenderWorldLast(RenderWorldLastEvent event) {
-        if (mc.theWorld == null || !this.isEnabled() || !showTruePositionsButton.isToggled()) {
+        if (mc.theWorld == null || !this.isEnabled() || (!showHitboxButton.isToggled() && !showGhostButton.isToggled())) {
             visualPosition = Optional.empty();
             return;
         }
-
-        // render hitbox only when we have a target
-        if (!currentTarget.isPresent()) {
+        Optional<EntityPlayer> targetOpt = this.currentTarget;
+        if (!targetOpt.isPresent()) {
             visualPosition = Optional.empty();
             return;
         }
-
+        EntityPlayer target = targetOpt.get();
+        if (mc.thePlayer.getDistanceToEntity(target) < minRange.getInput()) {
+            visualPosition = Optional.empty();
+            return;
+        }
         if (truePosition.isPresent()) {
             Vec3 targetPos = truePosition.get();
             if (!visualPosition.isPresent()) {
@@ -179,14 +203,45 @@ public class Backtrack extends Module {
             visualPosition = Optional.of(newVisualPos);
 
             RenderManagerAccessor renderManager = (RenderManagerAccessor) mc.getRenderManager();
-            Vec3 renderVec = new Vec3(
-                    newVisualPos.xCoord - renderManager.getRenderPosX(),
-                    newVisualPos.yCoord - renderManager.getRenderPosY(),
-                    newVisualPos.zCoord - renderManager.getRenderPosZ()
-            );
-            SlantRenderUtils.drawBbox3d(renderVec, 0.0f, 1.0f, 0.0f, 0.7f, 0.25f, false);
+            double renderX = newVisualPos.xCoord - renderManager.getRenderPosX();
+            double renderY = newVisualPos.yCoord - renderManager.getRenderPosY();
+            double renderZ = newVisualPos.zCoord - renderManager.getRenderPosZ();
+
+            if (showHitboxButton.isToggled()) {
+                SlantRenderUtils.drawBbox3d(new Vec3(renderX, renderY, renderZ), (float) hitboxRed.getInput(), (float) hitboxGreen.getInput(), (float) hitboxBlue.getInput(), (float) hitboxAlpha.getInput(), (float) hitboxFillMult.getInput(), false);
+            }
+            if (showGhostButton.isToggled()) {
+                renderGhost(target, renderX, renderY, renderZ, event.partialTicks);
+            }
         } else {
             visualPosition = Optional.empty();
+        }
+    }
+
+    private void renderGhost(EntityPlayer entity, double x, double y, double z, float partialTicks) {
+        RenderManager renderManager = mc.getRenderManager();
+        int originalHurtTime = entity.hurtTime;
+        entity.hurtTime = 0;
+        try {
+            GlStateManager.pushMatrix();
+            GlStateManager.pushAttrib();
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+            GlStateManager.disableLighting();
+            GlStateManager.depthMask(false);
+            GlStateManager.enableDepth();
+            GlStateManager.enablePolygonOffset();
+            GlStateManager.doPolygonOffset(1.0f, -1000000.0f);
+            GlStateManager.color((float) ghostRed.getInput(), (float) ghostGreen.getInput(), (float) ghostBlue.getInput(), (float) ghostAlpha.getInput());
+            renderManager.renderEntityWithPosYaw(entity, x, y, z, entity.rotationYaw, partialTicks);
+            GlStateManager.disablePolygonOffset();
+            GlStateManager.enableLighting();
+            GlStateManager.depthMask(true);
+            GlStateManager.disableBlend();
+            GlStateManager.popAttrib();
+            GlStateManager.popMatrix();
+        } finally {
+            entity.hurtTime = originalHurtTime;
         }
     }
 
@@ -196,6 +251,17 @@ public class Backtrack extends Module {
     // endregion
 
     // region Core Logic
+    private double calculateDynamicDelay() {
+        if (!truePosition.isPresent()) return 0;
+        double distance = mc.thePlayer.getDistance(truePosition.get().xCoord, truePosition.get().yCoord, truePosition.get().zCoord);
+        double min = minRange.getInput();
+        double max = maxRange.getInput();
+        if (max <= min) return 0;
+        double progress = (distance - min) / (max - min);
+        progress = MathHelper.clamp_double(progress, 0.0, 1.0);
+        return maxDynamicDelay.getInput() * progress;
+    }
+
     private boolean isMovementPacket(Packet<?> packet) {
         return packet instanceof S14PacketEntity || packet instanceof S18PacketEntityTeleport || packet instanceof S12PacketEntityVelocity;
     }
@@ -264,7 +330,7 @@ public class Backtrack extends Module {
 
     private void validateCurrentTarget() {
         this.currentTarget.ifPresent(p -> {
-            if (!p.isEntityAlive() || mc.thePlayer.getDistanceSqToEntity(p) > 20 * 20) {
+            if (!p.isEntityAlive() || mc.thePlayer.getDistanceSqToEntity(p) > maxTargetRange.getInput() * maxTargetRange.getInput()) {
                 setTarget(null);
             }
         });

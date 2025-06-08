@@ -56,6 +56,7 @@ public class JumpReset extends Module {
 
     @SubscribeEvent
     public void onPacket(PacketEvent.Receive e) {
+        if(!Utils.nullCheckPasses()) return;
         if (e.getPacket() instanceof S12PacketEntityVelocity) {
             if (chance.getInput() != 100.0D) {
                 double ch = Math.random() * 100;
