@@ -73,6 +73,11 @@ public class Backtrack extends Module {
     private Optional<Vec3> truePosition = Optional.empty();
     private Optional<Vec3> lastTruePosition = Optional.empty();
     private Optional<Vec3> visualPosition = Optional.empty();
+    /**
+     * Stores the peak dynamic delay achieved for the current target.
+     * This prevents the total delay from decreasing, which avoids suspicious out-of-order packet processing.
+     */
+    private double activeDynamicDelay = 0.0;
     // endregion
 
     public Backtrack() {
@@ -96,7 +101,7 @@ public class Backtrack extends Module {
         super.onDisable();
         flushHeldPackets();
         PacketInterceptionManager.flushInboundQueue();
-        setTarget(null);
+        setTarget(null); // This will also reset activeDynamicDelay
     }
 
     // region Event Handling
@@ -118,9 +123,13 @@ public class Backtrack extends Module {
         }
         validateCurrentTarget();
 
-        // ** THE FIX: Calculate total delay by adding base and dynamic components **
-        double dynamicDelay = calculateDynamicDelay();
-        double totalDelay = baseDelay.getInput() + dynamicDelay;
+        // ** THE FIX: only increase the dynamic delay for a given target **
+        // calculate the potential delay based on current distance
+        double potentialDynamicDelay = calculateDynamicDelay();
+        // lock in the highest delay we've seen for this target to prevent out-of-order packets
+        this.activeDynamicDelay = Math.max(this.activeDynamicDelay, potentialDynamicDelay);
+
+        double totalDelay = baseDelay.getInput() + this.activeDynamicDelay;
         PacketInterceptionManager.processInboundQueue(totalDelay);
 
         // the maxOutboundHoldTime setting is for the outbound packet hold time
@@ -325,6 +334,9 @@ public class Backtrack extends Module {
             this.truePosition = this.currentTarget.map(Entity::getPositionVector);
             this.lastTruePosition = this.truePosition;
             if (mc.thePlayer != null) this.lastSentPosition = Optional.of(new Vec3(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ));
+
+            // reset the peak delay when the target is cleared or changed.
+            this.activeDynamicDelay = 0.0;
         }
     }
 
