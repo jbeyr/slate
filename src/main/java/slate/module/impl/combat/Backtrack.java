@@ -1,17 +1,14 @@
 package slate.module.impl.combat;
 
 import lombok.Getter;
+import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.C03PacketPlayer;
-import net.minecraft.network.play.server.S0BPacketAnimation;
-import net.minecraft.network.play.server.S12PacketEntityVelocity;
-import net.minecraft.network.play.server.S14PacketEntity;
-import net.minecraft.network.play.server.S18PacketEntityTeleport;
+import net.minecraft.network.play.server.*;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -73,11 +70,8 @@ public class Backtrack extends Module {
     private Optional<Vec3> truePosition = Optional.empty();
     private Optional<Vec3> lastTruePosition = Optional.empty();
     private Optional<Vec3> visualPosition = Optional.empty();
-    /**
-     * Stores the peak dynamic delay achieved for the current target.
-     * This prevents the total delay from decreasing, which avoids suspicious out-of-order packet processing.
-     */
     private double activeDynamicDelay = 0.0;
+    private Optional<Vec3> pendingSelfVelocity = Optional.empty();
     // endregion
 
     public Backtrack() {
@@ -101,7 +95,7 @@ public class Backtrack extends Module {
         super.onDisable();
         flushHeldPackets();
         PacketInterceptionManager.flushInboundQueue();
-        setTarget(null); // This will also reset activeDynamicDelay
+        setTarget(null);
     }
 
     // region Event Handling
@@ -123,16 +117,11 @@ public class Backtrack extends Module {
         }
         validateCurrentTarget();
 
-        // ** THE FIX: only increase the dynamic delay for a given target **
-        // calculate the potential delay based on current distance
         double potentialDynamicDelay = calculateDynamicDelay();
-        // lock in the highest delay we've seen for this target to prevent out-of-order packets
         this.activeDynamicDelay = Math.max(this.activeDynamicDelay, potentialDynamicDelay);
-
         double totalDelay = baseDelay.getInput() + this.activeDynamicDelay;
         PacketInterceptionManager.processInboundQueue(totalDelay);
 
-        // the maxOutboundHoldTime setting is for the outbound packet hold time
         if (isActivelyHolding && System.currentTimeMillis() - holdStartTime > maxOutboundHoldTime.getInput()) {
             flushHeldPackets();
         }
@@ -152,22 +141,35 @@ public class Backtrack extends Module {
 
     @SubscribeEvent
     public void onPacketReceive(PacketEvent.Receive event) {
-        if (!this.isEnabled() || !(mc.getNetHandler() instanceof NetHandlerPlayClient)) return;
-        updateTruePositionFromPacket(event.getPacket());
-        if (isActivelyHolding && disableIfHit.isToggled() && event.getPacket() instanceof S12PacketEntityVelocity) {
-            if (((S12PacketEntityVelocity) event.getPacket()).getEntityID() == mc.thePlayer.getEntityId()) {
+        if (!this.isEnabled() || !Utils.nullCheckPasses()) return;
+
+        Packet<?> packet = event.getPacket();
+        updatePendingVelocity(packet);
+        updateTruePositionFromPacket(packet);
+
+        if (disableIfHit.isToggled() && packet instanceof S12PacketEntityVelocity) {
+            if (((S12PacketEntityVelocity) packet).getEntityID() == mc.thePlayer.getEntityId()) {
                 flushHeldPackets();
             }
         }
+
         boolean shouldDelay = false;
         if (allPackets.isToggled()) {
             shouldDelay = true;
         } else {
-            if (forMovePackets.isToggled() && isMovementPacket(event.getPacket())) shouldDelay = true;
-            if (forAttackPackets.isToggled() && isAttackPacket(event.getPacket())) shouldDelay = true;
+            if (forMovePackets.isToggled() && isMovementPacket(packet)) shouldDelay = true;
+            if (forAttackPackets.isToggled() && isAttackPacket(packet)) shouldDelay = true;
         }
+
         if (shouldDelay) {
-            PacketInterceptionManager.queueInboundPacket(event.getPacket());
+            // ** THE FIX: If no delay is configured, bypass the queueing system entirely. **
+            // This prevents the "phantom delay" from moving packets between the network and main threads.
+            if (baseDelay.getInput() <= 0 && maxDynamicDelay.getInput() <= 0) {
+                // By returning here, we don't cancel the packet event, allowing it to process instantly.
+                return;
+            }
+
+            PacketInterceptionManager.queueInboundPacket(packet);
             event.setCanceled(true);
         }
     }
@@ -280,17 +282,26 @@ public class Backtrack extends Module {
     }
 
     private void handlePlayerPacket(C03PacketPlayer packet) {
-        Optional<Vec3> targetPos = this.truePosition;
-        Vec3 currentPos = new Vec3(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
-        if (!lastSentPosition.isPresent()) lastSentPosition = Optional.of(currentPos);
-        if (!targetPos.isPresent()) {
+        Optional<Vec3> targetPosOpt = this.truePosition;
+        if (!targetPosOpt.isPresent()) {
             flushAndSend(packet);
             return;
         }
+
+        Vec3 currentPos = new Vec3(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
+        if (!lastSentPosition.isPresent()) lastSentPosition = Optional.of(currentPos);
+
         Vec3 packetPos = new Vec3(packet.getPositionX(), packet.getPositionY(), packet.getPositionZ());
         Vec3 nextPlayerPos = packet.isMoving() ? packetPos : currentPos;
-        double nextDist = nextPlayerPos.distanceTo(targetPos.get());
-        if (nextDist < maxRange.getInput() || lastSentPosition.get().distanceTo(targetPos.get()) < minRange.getInput()) {
+
+        Vec3 serverExpectedPlayerPos = nextPlayerPos;
+        if (this.pendingSelfVelocity.isPresent()) {
+            serverExpectedPlayerPos = serverExpectedPlayerPos.add(this.pendingSelfVelocity.get());
+            this.pendingSelfVelocity = Optional.empty();
+        }
+
+        double nextDist = serverExpectedPlayerPos.distanceTo(targetPosOpt.get());
+        if (nextDist < maxRange.getInput() || lastSentPosition.get().distanceTo(targetPosOpt.get()) < minRange.getInput()) {
             flushAndSend(packet);
         } else {
             holdPacket(packet);
@@ -334,9 +345,8 @@ public class Backtrack extends Module {
             this.truePosition = this.currentTarget.map(Entity::getPositionVector);
             this.lastTruePosition = this.truePosition;
             if (mc.thePlayer != null) this.lastSentPosition = Optional.of(new Vec3(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ));
-
-            // reset the peak delay when the target is cleared or changed.
             this.activeDynamicDelay = 0.0;
+            this.pendingSelfVelocity = Optional.empty();
         }
     }
 
@@ -346,6 +356,22 @@ public class Backtrack extends Module {
                 setTarget(null);
             }
         });
+    }
+
+    private void updatePendingVelocity(Packet<?> packet) {
+        if (mc.thePlayer == null) return;
+
+        if (packet instanceof S12PacketEntityVelocity) {
+            S12PacketEntityVelocity p = (S12PacketEntityVelocity) packet;
+            if (p.getEntityID() == mc.thePlayer.getEntityId()) {
+                this.pendingSelfVelocity = Optional.of(new Vec3(p.getMotionX() / 8000.0D, p.getMotionY() / 8000.0D, p.getMotionZ() / 8000.0D));
+            }
+        } else if (packet instanceof S27PacketExplosion) {
+            S27PacketExplosion p = (S27PacketExplosion) packet;
+            this.pendingSelfVelocity = Optional.of(new Vec3(p.func_149149_c(), p.func_149144_d(), p.func_149147_e()));
+        } else if (packet instanceof S08PacketPlayerPosLook) {
+            this.pendingSelfVelocity = Optional.empty();
+        }
     }
 
     private void updateTruePositionFromPacket(Packet<?> packet) {
