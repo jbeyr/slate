@@ -6,10 +6,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import slate.module.Module;
-import slate.module.ModuleManager;
-import slate.module.impl.combat.AimAssist;
-import slate.module.impl.combat.aimassist.NormalAimAssist;
+import slate.utility.slate.MouseManager;
 
 @Mixin(MouseHelper.class)
 public abstract class MixinMouseHelper {
@@ -19,13 +16,8 @@ public abstract class MixinMouseHelper {
 
     @Inject(method = "mouseXYChange", at = @At("RETURN"))
     private void onMouseXYChangeReturn(CallbackInfo ci) {
-        NormalAimAssist naa = ModuleManager.aimAssist.getNormalAimAssist();
-        if (naa.isAssistEnabledAndActive()) {
-            int assistDX = naa.getAssistDX_toApplyThisFrame();
-            int assistDY = naa.getAssistDY_toApplyThisFrame();
-
-            this.deltaX += assistDX;
-            this.deltaY += assistDY;
-        }
+        int[] add = MouseManager.consume();
+        this.deltaX += add[0];
+        this.deltaY += add[1];
     }
 }

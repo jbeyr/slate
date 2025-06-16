@@ -19,6 +19,7 @@ import slate.module.setting.impl.ModeSetting;
 import slate.module.setting.impl.SliderSetting;
 import slate.module.setting.impl.SubMode;
 import slate.utility.slate.Interpolate;
+import slate.utility.slate.MouseManager;
 import slate.utility.slate.RayUtils;
 import slate.utility.Utils;
 
@@ -69,9 +70,7 @@ public class NormalAimAssist extends SubMode<AimAssist> {
     private float accumulatedMouseDY = 0.0f;
 
     // deltas to be applied by the Mixin this frame
-    @Getter
     private int assistDX_toApplyThisFrame = 0;
-    @Getter
     private int assistDY_toApplyThisFrame = 0;
 
     private Optional<AimResult> currentTarget = Optional.empty();
@@ -145,38 +144,38 @@ public class NormalAimAssist extends SubMode<AimAssist> {
 
         if (shouldAimThisFrame) {
 
-            /* 0) ───── throw away invalid target ───── */
+            // toss if invalid target
             if (currentTarget.isPresent() && !isTargetStillValid(currentTarget.get(), partialTicks)) {
                 currentTarget = Optional.empty();
             }
 
-            /* 1) ───── perform swap requested by the autoclicker ───── */
+            // do swap requested by the autoclicker
             if (pendingSwitch || switchIfMoreDesirableTarget.isToggled()) {
 
                 Optional<AimResult> newTarget = findBestPotentialTarget(
                         partialTicks,
-                        (float) switchFov.getInput(),   // narrow cone
-                        switchExclude                   // exclude the entity we just hit
+                        (float) switchFov.getInput(),
+                        switchExclude // exclude entity we just hit
                 );
 
-                // Only switch when there is a DIFFERENT target to switch to.
                 if (newTarget.isPresent()) {
-                    currentTarget = newTarget;          // swap
+                    currentTarget = newTarget;
                 }
-                // else: stay locked on the old one
-                pendingSwitch = false;                  // request handled
+
+                // otherwise stay on old target
+                pendingSwitch = false; // we handled this request, so switch off
             }
 
 
-            /* 2) ───── normal acquisition fallback ───── */
+            // normal targeting
             if (!currentTarget.isPresent()) {
-                currentTarget = findBestPotentialTarget(          // ← CHANGED
+                currentTarget = findBestPotentialTarget(
                         partialTicks,
-                        (float) fov.getInput(),                   // use normal-FOV
-                        null);                                   // no exclusion
+                        (float) fov.getInput(),
+                        null); // no exclusion
             }
 
-            /* refresh the stored aim-vector each tick */
+            // refresh stored aim vector
             if (currentTarget.isPresent()) {
                 EntityLivingBase tgt = currentTarget.get().getTarget();
 
@@ -205,7 +204,7 @@ public class NormalAimAssist extends SubMode<AimAssist> {
                     float yawDiff   = MathHelper.wrapAngleTo180_float(targetYaw - playerYaw);
                     float pitchDiff = targetPitch - playerPitch;
 
-                    /* Dead-zone to avoid tiny oscillations */
+                    // deadzone; avoid pitch/yaw oscillations
                     if (Math.abs(yawDiff)  < DEADZONE_ANGLE &&
                             Math.abs(pitchDiff) < DEADZONE_ANGLE) {
 
@@ -220,7 +219,7 @@ public class NormalAimAssist extends SubMode<AimAssist> {
                         float pitchApply = pitchDiff * frameStrength;
 
                         float sens = mc.gameSettings.mouseSensitivity * 0.6F + 0.2F;
-                        float factor = sens * sens * sens * 8.0F * 0.15F;     // deg per delta-unit
+                        float factor = sens * sens * sens * 8.0F * 0.15F; // deg per delta-unit
 
                         if (factor > 0.0001f) {
                             rawFractionalMouseDXThisFrame =  yawApply   / factor;
@@ -233,7 +232,8 @@ public class NormalAimAssist extends SubMode<AimAssist> {
         } else {
             currentTarget = Optional.empty();
         }
-        // ───────────────────────────────────────────────────────────────────────────────
+
+        // now request the mouse changes
 
         accumulatedMouseDX += rawFractionalMouseDXThisFrame;
         accumulatedMouseDY += rawFractionalMouseDYThisFrame;
@@ -258,14 +258,19 @@ public class NormalAimAssist extends SubMode<AimAssist> {
                 accumulatedMouseDY -= assistDY_toApplyThisFrame;
             } else if (Math.abs(accumulatedMouseDY) < 0.05f) accumulatedMouseDY = 0;
         }
+
+        // finally, send a mouse move request
+        if (assistDX_toApplyThisFrame != 0 || assistDY_toApplyThisFrame != 0) {
+            MouseManager.offer(assistDX_toApplyThisFrame, assistDY_toApplyThisFrame, MouseManager.Priority.NORMAL);
+        }
     }
 
     @SubscribeEvent
     public void onAutoClickerAttack(slate.event.custom.AutoclickerAttackEvent e) {
-        if (!switchTargetsOnHit.isToggled()) return;               // feature off?
+        if (!switchTargetsOnHit.isToggled()) return;
         if (!(e.getAttacked() instanceof EntityLivingBase)) return;
-        pendingSwitch = true;                                 // request swap
-        switchExclude = (EntityLivingBase) e.getAttacked();   // don’t retarget same entity
+        pendingSwitch = true;
+        switchExclude = (EntityLivingBase) e.getAttacked(); // don't retarget same entity
     }
 
 
@@ -373,15 +378,11 @@ public class NormalAimAssist extends SubMode<AimAssist> {
     private boolean isTargetStillValid(AimResult ar, float partialTicks) {
         EntityLivingBase e = ar.getTarget();
         if (e == null || e.isDead || e.getHealth() <= 0) return false;
-
-        // out of world list via despawn or teleport
         if (!mc.theWorld.loadedEntityList.contains(e)) return false;
 
-        // range check
         double dSq = Interpolate.interpolatedDistanceSqToEntity(mc.thePlayer, e, partialTicks);
         if (dSq < minRangeSq || dSq > maxRangeSq) return false;
 
-        // keep inside normal FOV so we don’t stare at someone behind
         return isWithinFOVInterpolated((float) fov.getInput(), partialTicks, ar.getAimVec());
     }
 }
