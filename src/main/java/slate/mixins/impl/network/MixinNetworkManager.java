@@ -43,12 +43,24 @@ public abstract class MixinNetworkManager {
     protected abstract void dispatchPacket(final Packet<?> p_dispatchPacket_1_, final GenericFutureListener<? extends Future<? super Void>>[] p_dispatchPacket_2_);
 
     // needed for packet manager / backtrack / pingspoofer
-    @Inject(method = "channelRead0*", at = @At("HEAD"), cancellable = true)
-    protected void channelRead0(final ChannelHandlerContext context, final Packet<?> packet, final CallbackInfo ci) {
+    @Inject(
+            method =
+                    "channelRead0(Lio/netty/channel/ChannelHandlerContext;" +
+                            "Lnet/minecraft/network/Packet;)V",
+            at = @At("HEAD"),
+            cancellable = true
+    )
+    private void onChannelRead0(ChannelHandlerContext ctx,
+                                Packet<?>                 packet,
+                                CallbackInfo              ci) {
+
+        /* channel is open? – vanilla does the same check */
         if (packet != null && isChannelOpen()) {
+
+            /* should we hold the packet? (PingSpoofer / Backtrack) */
             if (PacketManager.shouldSpoofInboundPackets(packet)) {
-                PacketManager.enqueueSpoofedInboundPacket(packet);
-                ci.cancel();
+                PacketManager.enqueueSpoofedInboundPacket(packet); // put it in our queue
+                ci.cancel();                                       // stop vanilla
             }
         }
     }

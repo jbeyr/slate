@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+// TODO probably gonna deprecate in favor of Pointers
 public class Indicators extends Module {
     private final ButtonSetting renderArrows;
     private final ButtonSetting renderPearls;

@@ -43,7 +43,7 @@ public class ModuleManager {
     public static Chams chams;
     public static Particles particles;
     public static Pointers pointers;
-    public static Indicators indicators;
+    // public static Indicators indicators;
     public static Animations animations;
     public static BreakProgress breakProgress;
     public static AntiShuffle antiShuffle;
@@ -114,7 +114,7 @@ public class ModuleManager {
         this.addModule(chams = new Chams());
         this.addModule(particles = new Particles());
         this.addModule(pointers = new Pointers());
-        this.addModule(indicators = new Indicators());
+        // this.addModule(indicators = new Indicators());
         this.addModule(animations = new Animations());
         this.addModule(breakProgress = new BreakProgress());
         this.addModule(antiShuffle = new AntiShuffle());

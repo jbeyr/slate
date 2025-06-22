@@ -160,17 +160,4 @@ public class Backtrack extends Module {
         float f2 = (float) (mc.thePlayer.posZ - (aabb.minZ + aabb.maxZ) / 2.0);
         return MathHelper.sqrt_float(f * f + f1 * f1 + f2 * f2);
     }
-
-    // /**
-    //  * Flushing mechanism that bypasses {@link slate.module.impl.other.PingSpoofer}.
-    //  */
-    // public static void forceFlush() {
-    //     for (DelayedPacket pkt : inboundPacketsQueue) {
-    //         try { pkt.getPacket().processPacket(...); }
-    //         catch (Exception e) { e.printStackTrace(); }
-    //     }
-    //     inboundPacketsQueue.clear();
-    // }
-
-
 }

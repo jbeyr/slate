@@ -20,8 +20,6 @@ import java.util.List;
  */
 public class Pointers extends Module {
 
-    /* ────────────────── Settings ────────────────── */
-
     private final ButtonSetting showArrows    = new ButtonSetting("Arrows",    true);
     private final ButtonSetting showFireballs = new ButtonSetting("Fireballs", true);
 
