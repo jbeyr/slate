@@ -1,7 +1,7 @@
 
 <div align = center>
 
-<img src="src/main/resources/logo.jpg" alt="logo" width="200"/>
+<img src="src/main/resources/logo.jpg" alt="logo" width="320"/>
 
 
 # Slate
@@ -13,7 +13,7 @@ Slate is a hacked client for Minecraft 1.8.9 built with closet-cheating modules 
 </div>
 
 # Installation
-Slant is standalone with dependents baked in and distributed as a `.jar` file. Just [download the latest release](https://github.com/jameesyy/slant/releases) and put it in your `./minecraft/mods/` folder.
+Slate is standalone with dependents baked in and distributed as a `.jar` file. Just [download the latest release](https://github.com/jameesyy/slate/releases) and put it in your `./minecraft/mods/` folder.
 
 # Features
 - **Anti Bot**: detects and ignores spoofed players that are fabricated by anticheats.
