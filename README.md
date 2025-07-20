@@ -1,7 +1,7 @@
 
 <div align = center>
 
-![logo.png](src/main/resources/logo.png)
+![logo.jpg](src/main/resources/logo.jpg)
 
 # Slant
 
