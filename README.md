@@ -1,9 +1,10 @@
 
 <div align = center>
 
-![logo.jpg](src/main/resources/logo.jpg)
+<img src="src/main/resources/logo.jpg" alt="logo" width="200"/>
 
-# Slant
+
+# Slate
 
 
 ![](https://tokei.rs/b1/github/jameesyy/slate)
