@@ -1,5 +1,6 @@
 package slate.utility.slate;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Vec3;
@@ -142,4 +143,23 @@ public class SlantRenderUtils {
         GL11.glVertex3d(minX, maxY, maxZ);
         GL11.glEnd();
     }
+
+    public static void drawBboxAtWorldPos(Vec3 worldPos,
+                                          float red, float green, float blue,
+                                          float opacity,
+                                          float filledOpacityMultiplier,
+                                          boolean respectDepth) {
+        Minecraft mc = Minecraft.getMinecraft();
+
+        // convert absolute world-space → relative render-space
+        Vec3 diff = new Vec3(
+                worldPos.xCoord - mc.getRenderManager().viewerPosX,
+                worldPos.yCoord - mc.getRenderManager().viewerPosY,
+                worldPos.zCoord - mc.getRenderManager().viewerPosZ);
+
+        // re-use the existing routine
+        drawBbox3d(diff, red, green, blue, opacity, filledOpacityMultiplier, respectDepth);
+    }
+
+
 }

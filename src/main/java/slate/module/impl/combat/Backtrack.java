@@ -60,38 +60,6 @@ public class Backtrack extends Module {
         if (imAttacking) {
             PacketManager.setTarget(Optional.of((EntityPlayer) other));
         }
-
-        //
-        // if (tm.isRecommendedTarget(e.target) && (e.target instanceof EntityPlayer)) {
-        //     PacketManager.setTarget(Optional.of((EntityPlayer) e.target));
-        // } else if (stopWhenAttacked.isToggled() && e.target == mc.thePlayer && e.entity == PacketManager.getTarget() && tm.isRecommendedTarget((EntityLivingBase) e.entity)) {
-        //     PacketManager.setTarget(Optional.empty());
-        // }
-    }
-
-    @SubscribeEvent
-    public void r1(RenderWorldLastEvent e) {
-        if (Utils.nullCheckPasses()) {
-            Backtrack bt = ModuleManager.backtrack;
-
-            EntityLivingBase target = PacketManager.getTarget();
-
-            Vec3 cttp = PacketManager.getCurrTickTargetPos();
-            Vec3 pttp = PacketManager.getPrevTickTargetPos();
-            if (bt.isEnabled() && target != null && cttp != null && pttp != null) {
-                double dSq = mc.thePlayer.getDistanceSqToEntity(target);
-                if(!(bt.getMinRangeSq() <= dSq && dSq <= bt.getMaxRangeSq())) return;
-                // long currentTime = System.currentTimeMillis();
-
-                // long cttt = PacketManager.getCurrTickTargetTime();
-                // long timeSinceLastUpdate = currentTime - cttt;
-                // long updateInterval = cttt - PacketManager.getPrevTickTargetTime();
-                // float targetPartialTicks = (float) timeSinceLastUpdate / updateInterval;
-
-                SlantRenderUtils.draw3dEntityESP(target, e.partialTicks, 0, 0, .5f, 0.7f);
-                // LagUtils.drawTrueBacktrackHitbox(prevTickTargetPos, currTickTargetPos, targetPartialTicks, e.partialTicks, .3f, .7f, .3f, 1f);
-            }
-        }
     }
 
 

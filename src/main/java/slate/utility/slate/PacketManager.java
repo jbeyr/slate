@@ -77,6 +77,10 @@ public class PacketManager {
             return false;
         }
 
+        if (p instanceof S00PacketKeepAlive) {
+            return false; // this is so we don't disconnect while in a hud menu
+        }
+
         if (isPlayClientPacket(p) && Utils.nullCheckPasses()) {
             if (bt.isEnabled()) {
                 if (p instanceof S18PacketEntityTeleport) {
@@ -213,6 +217,22 @@ public class PacketManager {
         setTargetPos(target == null ? null : new Vec3(target.posX, target.posY, target.posZ));
     }
 
+    public static Vec3 getInterpolatedTargetPos(float partialTicks) {
+        if (currTickTargetPos == null) return null;
+        if (prevTickTargetPos == null) return currTickTargetPos;
+
+        double ix = prevTickTargetPos.xCoord +
+                (currTickTargetPos.xCoord - prevTickTargetPos.xCoord) * partialTicks;
+        double iy = prevTickTargetPos.yCoord +
+                (currTickTargetPos.yCoord - prevTickTargetPos.yCoord) * partialTicks;
+        double iz = prevTickTargetPos.zCoord +
+                (currTickTargetPos.zCoord - prevTickTargetPos.zCoord) * partialTicks;
+
+        return new Vec3(ix, iy, iz);
+    }
+
+
+
     @SubscribeEvent
     public void onTick(TickEvent.ClientTickEvent e) {
         if (Utils.nullCheckPasses() && e.phase == TickEvent.Phase.START) {
@@ -226,7 +246,7 @@ public class PacketManager {
                 long now = System.currentTimeMillis();
                 for (DelayedPacket dp : PacketManager.inboundPacketsQueue) {
 
-                    long effectiveDelay = 0;            // <-- NEW
+                    long effectiveDelay = 0;
                     if (bt.isShouldSpoof())         // add Back-track delay
                         effectiveDelay += bt.getDelayMs();
 
@@ -258,5 +278,16 @@ public class PacketManager {
             this.packet = p_i45146_1_;
             this.futureListeners = p_i45146_2_;
         }
+    }
+
+    // PacketManager.java  (same class that already subscribes to ClientTickEvent)
+
+    @SubscribeEvent
+    public void onRenderTick(net.minecraftforge.fml.common.gameevent.TickEvent.RenderTickEvent e) {
+        if (e.phase != net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END)
+            return;
+
+        processWholePacketQueue();   // inbound
+        sendWholeOutboundQueue();    // outbound
     }
 }

@@ -27,6 +27,7 @@
     "render.ItemRendererAccessor",
     "render.MixinEntityRenderer",
     "render.MixinItemRenderer",
+    "render.MixinLayerCape",
     "render.RenderManagerAccessor"
   ]
 }

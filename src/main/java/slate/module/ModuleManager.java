@@ -49,6 +49,7 @@ public class ModuleManager {
     public static AntiShuffle antiShuffle;
     public static Potions potions;
     public static ItemESP itemESP;
+    public static CustomCape customCape;
 
     public static AntiBot antiBot;
     public static TargetManager targetManager;
@@ -120,6 +121,7 @@ public class ModuleManager {
         this.addModule(antiShuffle = new AntiShuffle());
         this.addModule(potions = new Potions());
         this.addModule(itemESP = new ItemESP());
+        this.addModule(customCape = new CustomCape());
 
         // world
         this.addModule(antiBot = new AntiBot());
