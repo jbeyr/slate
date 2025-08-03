@@ -1,10 +1,5 @@
 package slate.module.impl.combat;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemSword;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -17,151 +12,176 @@ import slate.utility.Utils;
 import slate.utility.slate.ActionCoordinator;
 
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicBoolean;
+import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemSword;
 
 public class BlockHit extends Module {
 
-    private final SliderSetting range = new SliderSetting("Range", 3, 1, 6, 0.02);
+    private final SliderSetting range = new SliderSetting("Range", 3.5, 1, 6, 0.1);
     private final SliderSetting chance = new SliderSetting("Chance", 1, 0.01, 1, 0.01);
-    private final ButtonSetting onlyPlayers = new ButtonSetting("Only players", true);
-    private final ButtonSetting onlyForward = new ButtonSetting("Only forward", true);
+    private final ButtonSetting onlyPlayers = new ButtonSetting("Only Players", true);
+    private final ButtonSetting onlyForward = new ButtonSetting("Only Forward", false);
 
-    private final SliderSetting waitMsMin = new SliderSetting("Wait Min (ms)", 37, 0, 100, 1);
-    private final SliderSetting waitMsMax = new SliderSetting("Wait Max (ms)", 59, 0, 100, 1);
-
-    private final SliderSetting actionMsMin = new SliderSetting("Action Min (ms)", 12, 1, 300, 1);
-    private final SliderSetting actionMsMax = new SliderSetting("Action Max (ms)", 41, 1, 300, 1);
+    private final SliderSetting delayMinMs = new SliderSetting("Delay Min (ms)", 20, 0, 250, 1);
+    private final SliderSetting delayMaxMs = new SliderSetting("Delay Max (ms)", 40, 0, 250, 1);
+    private final SliderSetting blockDurationMinMs = new SliderSetting("Block Duration Min (ms)", 60, 1, 500, 1);
+    private final SliderSetting blockDurationMaxMs = new SliderSetting("Block Duration Max (ms)", 120, 1, 500, 1);
 
     private final SliderSetting hitPerMin = new SliderSetting("Hit Per Min", 1, 1, 10, 1);
     private final SliderSetting hitPerMax = new SliderSetting("Hit Per Max", 1, 1, 10, 1);
 
     private double rangeSqr;
+    private boolean isBlockScheduled;
+    private boolean isCurrentlyBlocking;
 
-    private boolean executingAction;
-    private int hits, rHit;
-    private final AtomicBoolean eventProcessing = new AtomicBoolean(false);
-    private boolean tryStartCombo;
-    private final CoolDown actionTimer = new CoolDown(0);
-    private final CoolDown waitTimer = new CoolDown(0);
+    private int attackCounter;
+    private int nextBlockAttackCount;
+
+    private final CoolDown delayTimer = new CoolDown(0);
+    private final CoolDown blockDurationTimer = new CoolDown(0);
 
     public BlockHit() {
         super("Block Hit", category.combat);
-        this.registerSetting(range, chance, onlyPlayers, onlyForward, waitMsMin, waitMsMax, actionMsMin, actionMsMax, hitPerMin, hitPerMax);
-        rangeSqr = range.getInput() * range.getInput();
-        generateNewHitTarget();
+        this.registerSetting(
+                range, chance, onlyPlayers, onlyForward,
+                delayMinMs, delayMaxMs, blockDurationMinMs, blockDurationMaxMs,
+                hitPerMin, hitPerMax
+        );
     }
 
     @Override
     public void onEnable() {
-        executingAction = false;
-        hits = 0;
-        tryStartCombo = false;
-        generateNewHitTarget();
+        resetState();
+        generateNextBlockAttackTarget();
     }
 
     @Override
     public void onDisable() {
-        if (executingAction) {
-            finishCombo();
+        if (isCurrentlyBlocking) {
+            stopBlocking();
         }
+        resetState();
     }
 
+    @Override
     public void guiUpdate() {
-        Utils.correctValue(waitMsMin, waitMsMax);
-        Utils.correctValue(actionMsMin, actionMsMax);
+        // ensure min <= max for sliders
+        Utils.correctValue(delayMinMs, delayMaxMs);
+        Utils.correctValue(blockDurationMinMs, blockDurationMaxMs);
         Utils.correctValue(hitPerMin, hitPerMax);
 
         rangeSqr = Math.pow(range.getInput(), 2);
     }
 
-    private void generateNewHitTarget() {
-        int min = (int) hitPerMin.getInput();
-        int max = (int) hitPerMax.getInput();
-        int range = max - min + 1;
-        rHit = ThreadLocalRandom.current().nextInt(range) + min;
+    private void resetState() {
+        isBlockScheduled = false;
+        isCurrentlyBlocking = false;
+        attackCounter = 0;
+        delayTimer.finish();
+        blockDurationTimer.finish();
     }
 
     @SubscribeEvent
-    public void onRender(RenderWorldLastEvent e) {
-        if (!isEnabled()) return;
-        if (!ActionCoordinator.isActingOnPlayerBehalfAllowed()) return;
+    public void onRender(RenderWorldLastEvent event) {
+        if (mc.thePlayer == null || !isEnabled()) return;
 
-        if (tryStartCombo && waitTimer.hasFinished()) {
-            tryStartCombo = false;
-            startCombo();
+        // this render-loop timer check drives our state machine
+        if (isBlockScheduled && delayTimer.hasFinished()) {
+            startBlocking();
         }
 
-        if (actionTimer.hasFinished() && executingAction) {
-            finishCombo();
+        if (isCurrentlyBlocking && blockDurationTimer.hasFinished()) {
+            stopBlocking();
         }
     }
 
     @SubscribeEvent
-    public void onHit(AttackEntityEvent fe) {
-        if (!isEnabled()) return;
-        if (!ActionCoordinator.isActingOnPlayerBehalfAllowed()) return;
-
-        // use atomic boolean to prevent duplicate processing
-        if (!eventProcessing.compareAndSet(false, true)) {
-            eventProcessing.set(false);
+    public void onPlayerAttack(AttackEntityEvent event) {
+        if (!shouldActOnAttack(event.target)) {
             return;
         }
 
-        try {
-            Minecraft mc = Minecraft.getMinecraft();
-            EntityPlayer me = mc.thePlayer;
-            hits++;
-
-            if (hits > rHit) {
-                hits = 1;
-                generateNewHitTarget();
-            }
-
-            ItemStack heldItem = me.getCurrentEquippedItem();
-
-            if ((!(fe.target instanceof EntityPlayer) && onlyPlayers.isToggled())
-                    || !(Math.random() <= chance.getInput())
-                    || !(heldItem != null && heldItem.getItem() instanceof ItemSword)
-                    || mc.thePlayer.getDistanceSqToEntity(fe.target) > rangeSqr
-                    || !(rHit == hits))
-                return;
-
-            tryStartCombo();
-        } finally {
-            eventProcessing.set(false);
+        // if we pass all checks, count this as a valid hit
+        attackCounter++;
+        if (attackCounter >= nextBlockAttackCount) {
+            scheduleBlock();
+            generateNextBlockAttackTarget(); // reset for the next sequence
         }
     }
 
-    private void finishCombo() {
-        Minecraft mc = Minecraft.getMinecraft();
-        if (!executingAction) return;
+    private void scheduleBlock() {
+        if (isBlockScheduled || isCurrentlyBlocking) return;
 
-        executingAction = false;
-        int key = mc.gameSettings.keyBindUseItem.getKeyCode();
-        KeyBinding.setKeyBindState(key, false);
-        Utils.setMouseButtonState(1, false);
+        isBlockScheduled = true;
+        long delay = (long) ThreadLocalRandom.current().nextDouble(delayMinMs.getInput(), delayMaxMs.getInput() + 0.01);
+        delayTimer.setCooldown(delay);
+        delayTimer.start();
     }
 
-    private void startCombo() {
-        Minecraft mc = Minecraft.getMinecraft();
+    private void startBlocking() {
+        isBlockScheduled = false;
+
         if (onlyForward.isToggled() && !Keyboard.isKeyDown(mc.gameSettings.keyBindForward.getKeyCode())) return;
 
-        executingAction = true;
+        isCurrentlyBlocking = true;
+
         int useItemKey = mc.gameSettings.keyBindUseItem.getKeyCode();
         KeyBinding.setKeyBindState(useItemKey, true);
         KeyBinding.onTick(useItemKey);
-        Utils.setMouseButtonState(1, true);
+        Utils.setMouseButtonState(1, true); // backup for some servers
 
-        // Set action timer with random duration
-        long actionDuration = (long) ThreadLocalRandom.current().nextDouble(waitMsMin.getInput(), waitMsMax.getInput() + 0.01);
-        actionTimer.setCooldown(actionDuration);
-        actionTimer.start();
+        long duration = (long) ThreadLocalRandom.current().nextDouble(blockDurationMinMs.getInput(), blockDurationMaxMs.getInput() + 0.01);
+        blockDurationTimer.setCooldown(duration);
+        blockDurationTimer.start();
     }
 
-    public void tryStartCombo() {
-        tryStartCombo = true;
-        long waitDuration = (long) ThreadLocalRandom.current().nextDouble(actionMsMin.getInput(), actionMsMax.getInput() + 0.01);
-        waitTimer.setCooldown(waitDuration);
-        waitTimer.start();
+    private void stopBlocking() {
+        if (!isCurrentlyBlocking) return;
+        isCurrentlyBlocking = false;
+
+        int useItemKey = mc.gameSettings.keyBindUseItem.getKeyCode();
+        KeyBinding.setKeyBindState(useItemKey, false);
+        Utils.setMouseButtonState(1, false);
+    }
+
+    private boolean shouldActOnAttack(Entity target) {
+        if (mc.thePlayer == null || !isEnabled() || !mc.thePlayer.isEntityAlive() || mc.currentScreen != null) {
+            return false;
+        }
+        if (!ActionCoordinator.isActingOnPlayerBehalfAllowed()) {
+            return false;
+        }
+
+        ItemStack heldItem = mc.thePlayer.getCurrentEquippedItem();
+        if (heldItem == null || !(heldItem.getItem() instanceof ItemSword)) {
+            return false;
+        }
+        if (onlyPlayers.isToggled() && !(target instanceof EntityPlayer)) {
+            return false;
+        }
+        if (mc.thePlayer.getDistanceSqToEntity(target) > rangeSqr) {
+            return false;
+        }
+        if (Math.random() > chance.getInput()) {
+            return false;
+        }
+        // all checks passed
+        return true;
+    }
+
+    private void generateNextBlockAttackTarget() {
+        attackCounter = 0;
+        int min = (int) hitPerMin.getInput();
+        int max = (int) hitPerMax.getInput();
+
+        // ensure min is not greater than max before generating random
+        if (min > max) {
+            nextBlockAttackCount = min;
+            return;
+        }
+        nextBlockAttackCount = ThreadLocalRandom.current().nextInt(min, max + 1);
     }
 }
