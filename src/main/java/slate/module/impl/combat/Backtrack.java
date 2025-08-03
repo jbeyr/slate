@@ -20,7 +20,7 @@ import java.util.Optional;
 
 public class Backtrack extends Module {
 
-    private static final double CLEANUP_DIST_SQ = 100d;
+    private static final double CLEANUP_DIST_SQ = 36d;
 
     @Getter private boolean shouldSpoof = false;
     @Getter private float delayMs;

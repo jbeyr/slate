@@ -6,10 +6,12 @@ import slate.event.ClickEvent;
 import slate.event.PreMotionEvent;
 import slate.event.custom.AutoclickerAttackEvent;
 import slate.mixins.impl.client.PlayerControllerMPAccessor;
+import slate.module.ModuleManager;
 import slate.module.impl.combat.autoclicker.*;
 import slate.module.setting.impl.ButtonSetting;
 import slate.module.setting.impl.ModeValue;
 import slate.module.setting.impl.SliderSetting;
+import slate.module.setting.impl.SubMode;
 import slate.utility.CoolDown;
 import slate.utility.Utils;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -84,5 +86,19 @@ public class AutoClicker extends IAutoClicker {
 
     public void sendAutoclickerAttackEvent(EntityLivingBase target) {
         MinecraftForge.EVENT_BUS.post(new AutoclickerAttackEvent(target));
+    }
+
+    /**
+     * Allows other modules to query the time remaining until the next scheduled click.
+     * @return The remaining time in milliseconds, or -1 if not available.
+     */
+    public static long getRemainingClickDelay() {
+        if (ModuleManager.autoClicker != null && ModuleManager.autoClicker.isEnabled()) {
+            SubMode<?> currentMode = ModuleManager.autoClicker.mode.getSubModeValues().get((int)ModuleManager.autoClicker.mode.getInput());
+            if (currentMode instanceof SlantLeftAutoClicker) {
+                return ((SlantLeftAutoClicker) currentMode).getRemainingDelay();
+            }
+        }
+        return -1; // return -1 to indicate timing is not available
     }
 }

@@ -15,6 +15,11 @@ public class ActionCoordinator {
         return isActingOnPlayerBehalfAllowed() && !mc.thePlayer.isUsingItem() && !AutoGhead.isInProgress();
     }
 
+    public static boolean isSwordBlockAllowed() {
+        Minecraft mc = Minecraft.getMinecraft();
+        return isActingOnPlayerBehalfAllowed() && !AutoGhead.isInProgress();
+    }
+
     public static boolean isHotbarSelectedSlotChangeAllowed() {
         return isActingOnPlayerBehalfAllowed();
     }

@@ -61,6 +61,7 @@ public class SlantLeftAutoClicker extends SubMode<IAutoClicker> {
         int key = mc.gameSettings.keyBindAttack.getKeyCode();
         KeyBinding.setKeyBindState(key, true);
         KeyBinding.onTick(key);
+        resetClickDelay(); // reset delay before sending event so blockhit module gets delay for next click and not this one
         if(target instanceof EntityLivingBase) ModuleManager.autoClicker.sendAutoclickerAttackEvent((EntityLivingBase) target);
         KeyBinding.setKeyBindState(key, false);
     }
@@ -99,8 +100,18 @@ public class SlantLeftAutoClicker extends SubMode<IAutoClicker> {
         return minDelay + (long)(Math.random() * (maxDelay - minDelay + 1));
     }
 
+    /**
+     * @return The remaining delay until the next click
+     */
+    public long getRemainingDelay() {
+        long timeSinceLastClick = System.currentTimeMillis() - lastClickTime;
+        long remaining = clickDelay - timeSinceLastClick;
+        return Math.max(0, remaining); // don't return a negative number
+    }
+
     @SubscribeEvent
     public void onMouseEvent(MouseEvent event) {
+        // reset click delay if we manually click left mouse button
         if (event.button == 0 && event.buttonstate) {  // 0 is the left mouse button; buttonstate is true if pressed
             resetClickDelay();
         }

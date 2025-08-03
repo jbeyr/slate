@@ -18,6 +18,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import slate.module.Module;
+import slate.module.setting.impl.ButtonSetting;
+import slate.module.setting.impl.SliderSetting;
 import slate.utility.slate.ActionCoordinator;
 
 import java.util.*;
@@ -32,8 +34,12 @@ public class AutoGhead extends Module {
     private int swappedFrom = 0;
     private boolean needToSwapBack = false;
 
+    private final ButtonSetting urgentHeal = new ButtonSetting("Urgent Heal", true, "Ignores regen timing if health is critically low");
+    private final SliderSetting urgentHpPercent = new SliderSetting("Urgent %", 0.35, 0.01, 1.0, 0.01, "Health percentage to trigger an urgent heal", urgentHeal::isToggled);
+
     public AutoGhead() {
         super("Auto Ghead", category.player);
+        this.registerSetting(urgentHeal, urgentHpPercent);
     }
 
     public static boolean isInProgress() {
@@ -49,18 +55,30 @@ public class AutoGhead extends Module {
      * @param player the player whose hotbar should be scanned for a suitable item
      * @return the healing item if (1) the player health threshold is below it, (2) if the item isn't on cooldown, and (3) if the nbt matches
      */
-    public static Optional<NbtComparer.HealingItemResult> getFirstHealingItemInHotbarNotOnCooldown(EntityPlayer player) {
+    public Optional<NbtComparer.HealingItemResult> getFirstHealingItemInHotbarNotOnCooldown(EntityPlayer player) {
 
         for (int i = 0; i < 9; i++) {
             ItemStack stack = player.inventory.getStackInSlot(i);
+            if(stack == null) continue;
+
             for (NbtComparer.HealingItem hItem : NbtComparer.getItemCooldowns()) {
                 if (!overlappingNbt(stack, hItem.sourceNbt)) continue;
-                if (player.getAbsorptionAmount() > 1f || player.getHealth() / player.getMaxHealth() > hItem.usageThreshold) continue;
 
-                Long healingItemCooldown = individualCooldowns.getOrDefault(hItem, 0L);
-                if(System.currentTimeMillis() > healingItemCooldown) {
+                float hpPercent = player.getHealth() / player.getMaxHealth();
+                boolean isHpBelowThreshold = hpPercent <= hItem.usageThreshold;
+                boolean isUrgent = urgentHeal.isToggled() && hpPercent <= (float) urgentHpPercent.getInput() && player.getAbsorptionAmount() < 1f;
+
+                if (!isUrgent && !isHpBelowThreshold) continue;
+
+                if(isUrgent) {
                     return Optional.of(new NbtComparer.HealingItemResult(hItem, i));
+                } else {
+                    Long healingItemCooldown = individualCooldowns.getOrDefault(hItem, 0L);
+                    if(System.currentTimeMillis() > healingItemCooldown) {
+                        return Optional.of(new NbtComparer.HealingItemResult(hItem, i));
+                    }
                 }
+
             }
         }
         return Optional.empty();
