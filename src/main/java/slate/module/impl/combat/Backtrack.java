@@ -2,10 +2,7 @@ package slate.module.impl.combat;
 
 import lombok.Getter;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
@@ -16,36 +13,38 @@ import slate.module.impl.world.targeting.TargetManager;
 import slate.module.setting.impl.ButtonSetting;
 import slate.module.setting.impl.SliderSetting;
 import slate.utility.Utils;
-import slate.utility.slate.DelayedPacket;
 import slate.utility.slate.PacketManager;
 import slate.utility.slate.SlantRenderUtils;
 
 import java.util.Optional;
 
-import static slate.utility.slate.PacketManager.inboundPacketsQueue;
-
 public class Backtrack extends Module {
 
-    private static final int SENSITIVITY = 100; // hard to configure well and if we make this more lax (lower than 100) it'll probably ban on prediction anticheats anyway
+    private static final double CLEANUP_DIST_SQ = 100d;
+
     @Getter private boolean shouldSpoof = false;
     @Getter private float delayMs;
     @Getter private float minRangeSq;
     @Getter private float maxRangeSq;
 
-    private final SliderSetting delayMsSlider = new SliderSetting("Delay (ms)", 1, 1, 20, 1);
+    private final SliderSetting delayMsSlider = new SliderSetting("Delay (ms)", 1, 1, 100, 1);
     private final SliderSetting minRange = new SliderSetting("Min Range", 3.5, 0, 4, 0.02);
     private final SliderSetting maxRange = new SliderSetting("Max Range", 8, 0, 8, 0.02);
-
-    /**
-     * Intended to extend the window we can attack back and trade if the target has better ping and hits us first.
-     */
     private final ButtonSetting startWhenAttacked = new ButtonSetting("Start if target hits first", false);
+    private final ButtonSetting renderOriginalPosition = new ButtonSetting("Render Original Position", true);
+    private final ButtonSetting smartDisable = new ButtonSetting("Smart Disable", true, "Disables backtrack if the target is moving toward you so that if they get a combo they aren't out of range as a result of the backtrack lag");
+    private final SliderSetting rushThreshold = new SliderSetting("Rush Threshold", -0.7, -1, 0, 0.01, "How directly the target must rush you to disable backtrack (dot product of current and past velocity)", smartDisable::isToggled);
+
+    public Backtrack() {
+        super("Backtrack", category.combat);
+        this.registerSetting(delayMsSlider, minRange, maxRange, startWhenAttacked, renderOriginalPosition, smartDisable, rushThreshold);
+    }
 
     @SubscribeEvent
     public void onCombat(AttackEntityEvent e) {
         boolean imAttacked = e.target == mc.thePlayer;
         boolean imAttacking = e.entity == mc.thePlayer;
-        if(!imAttacked && !imAttacking) return; // doesn't involve user
+        if(!imAttacked && !imAttacking) return;
 
         TargetManager tm = ModuleManager.targetManager;
         Entity other = e.target == mc.thePlayer ? e.entity : e.target;
@@ -62,12 +61,6 @@ public class Backtrack extends Module {
         }
     }
 
-
-    public Backtrack() {
-        super("Backtrack", category.combat);
-        this.registerSetting(delayMsSlider, minRange, maxRange, startWhenAttacked);
-    }
-
     @Override
     public void guiUpdate() throws Throwable {
         super.guiUpdate();
@@ -80,52 +73,96 @@ public class Backtrack extends Module {
 
     public void tickCheck() {
         EntityPlayer target = PacketManager.getTarget();
-        Optional<AxisAlignedBB> targetBox = PacketManager.getTargetBox();
 
         if (target == null) {
             shouldSpoof = false;
             return;
         }
 
-        // compute distance once
         double dSq = mc.thePlayer.getDistanceSqToEntity(target);
 
-        // stop if too close
-        if (dSq < minRangeSq) {
+        // remove backtrack target if unreasonably far
+        if (dSq > CLEANUP_DIST_SQ) {
+            PacketManager.setTarget(Optional.empty());
+            shouldSpoof = false;
+            return;
+        }
+
+        if (dSq < minRangeSq || dSq > maxRangeSq) {
             shouldSpoof = false;
             PacketManager.forceFlushInboundQueue();
             return;
         }
 
-        // stop if too far
-        if (dSq > maxRangeSq) {
-            shouldSpoof = false;
-            PacketManager.forceFlushInboundQueue();
-            return;
-        }
+        if (smartDisable.isToggled()) {
+            Vec3 myLookVec = mc.thePlayer.getLookVec();
+            Vec3 targetVelocityVec = new Vec3(
+                    target.posX - target.prevPosX,
+                    0,
+                    target.posZ - target.prevPosZ
+            );
 
-        // do the backtracking
-        if (targetBox.isPresent()) {
+            double velLength = targetVelocityVec.lengthVector();
 
-            double boxedDist = distanceToAxis(targetBox.get());
-            double realDist = distanceToAxis(target.getEntityBoundingBox());
-            double sensitivityAdj = (double) (SENSITIVITY - 100) / 100D;
-
-            if (boxedDist + sensitivityAdj < realDist) {
-                PacketManager.processWholePacketQueue(); // send everything
-            } else {
-                shouldSpoof = true; // hold packets → spoof
+            // if target is stationary, no real need to delay packets
+            if(velLength < .01d) {
+                shouldSpoof = false;
+                return; // no need to flush queue; packets are minimal here anyway
             }
-        } else {
-            shouldSpoof = false; // no cached box
+
+            Vec3 targetDirectionVec = targetVelocityVec.normalize();
+
+            // if approaching -1 => target is moving directly to us
+            // if approaching 0 => target is strafing perpendicular to us
+            // if approaching 1 => target is moving away from us
+            double dotProduct = myLookVec.dotProduct(targetDirectionVec);
+
+            // if target is moving to us, backtracking would make them appear further away
+            // assuming they hit us, we won't be able to hit back, so don't backtrack here
+            if (dotProduct < rushThreshold.getInput()) {
+                shouldSpoof = false;
+                PacketManager.forceFlushInboundQueue();
+                return;
+            }
         }
+
+        // passed all checks; desirable to backtrack
+        shouldSpoof = true;
     }
 
+    @SubscribeEvent
+    public void onRenderWorld(RenderWorldLastEvent event) {
+        // This guard clause is now the *only* thing that matters for rendering.
+        // If the module is on, the setting is on, and we are actively spoofing, we proceed.
+        if (!renderOriginalPosition.isToggled() || !isEnabled() || !shouldSpoof) {
+            return;
+        }
 
-    public static double distanceToAxis(AxisAlignedBB aabb) {
-        float f = (float) (mc.thePlayer.posX - (aabb.minX + aabb.maxX) / 2.0);
-        float f1 = (float) (mc.thePlayer.posY - (aabb.minY + aabb.maxY) / 2.0);
-        float f2 = (float) (mc.thePlayer.posZ - (aabb.minZ + aabb.maxZ) / 2.0);
-        return MathHelper.sqrt_float(f * f + f1 * f1 + f2 * f2);
+        // We still need a target to get position data from.
+        // This check is mostly redundant because shouldSpoof would be false without a target,
+        // but it's good practice for preventing NullPointerExceptions.
+        EntityPlayer target = PacketManager.getTarget();
+        if (target == null) {
+            return;
+        }
+
+        // Get the interpolated "real" position from the packet history.
+        Vec3 interpolatedPos = PacketManager.getInterpolatedTargetPos(event.partialTicks);
+
+        // This should rarely, if ever, be null when shouldSpoof is true, but it's a safe check.
+        if (interpolatedPos == null) {
+            return;
+        }
+
+        // --- All dynamic color logic has been removed ---
+
+        // Always render the box in a single, consistent color (white).
+        SlantRenderUtils.drawBboxAtWorldPos(
+                interpolatedPos,
+                1.0f, 1.0f, 1.0f, // Static white color
+                0.6f,             // Overall opacity (for the outline)
+                0.25f,            // Opacity multiplier for the filled part
+                false             // Don't respect depth
+        );
     }
 }
