@@ -24,7 +24,7 @@ Slate is standalone with dependents baked in and distributed as a `.jar` file. J
 - **Auto Tool**: swaps to the tool that mines the block you're trying to break the fastest.
 - **Auto Weapon**: swaps to the leftmost slot with a weapon in your hotbar.
 - **Backtrack**: lag-based reach module. Takes advantage of anticheat lag compensation by throttling packet transmission in advantageous circumstances (e.g. delay inbound packets and create client-sided movement on entities that allow false hits).
-- **Blockhit**: automatically blockhits when you attack with your sword.
+- **Blockhit**: automatically blockhits when you attack with your sword. Offers autoclicker sync and buffers unblocking actions.
 - **Bridge Assist**: dynamically toggles the sneak button for the player as they're bridging so they don't fall off a ledge or into the void.
 - **Delay Remover**: removes the vanilla attack, mining, and jump cooldown that occurs when you miss clicks, mine a block, and jump respectively.
 - **ESP**: renders hitboxes on players; particularly useful for invisibles and certain blocks.
