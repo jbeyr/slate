@@ -7,7 +7,7 @@
 # Slate
 
 
-![](https://tokei.rs/b1/github/jameesyy/slate)
+![](https://tokei.rs/b1/github/jbeyr/slate)
 
 Slate is a hacked client for Minecraft 1.8.9 built with closet-cheating modules and miscellaneous QoL features.
 </div>
