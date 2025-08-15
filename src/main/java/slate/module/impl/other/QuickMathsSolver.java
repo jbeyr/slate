@@ -5,6 +5,7 @@ import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import slate.module.Module;
+import slate.module.setting.impl.SliderSetting;
 import slate.utility.Utils;
 
 import java.text.DecimalFormat;
@@ -16,10 +17,10 @@ public class QuickMathsSolver extends Module {
     private final Random random = new Random();
     private int delayTicks = 0;
     private Optional<String> queuedAnswer = Optional.empty();
-    private static int minResponseTicks;
-    private static int maxResponseTicks;
-    private static int replyAfterXSolvers;
-    private static boolean enabled;
+
+    private final SliderSetting minResponseTicks = new SliderSetting("Min Ticks", 50, 1, 200, 1);
+    private final SliderSetting maxResponseTicks = new SliderSetting("Max Ticks", 80, 1, 200, 1);
+    private final SliderSetting replyAfterXSolvers = new SliderSetting("After X solvers", 3, 0, 4, 1);
 
     private int currentSolvers = 0;
     private boolean readyToSolve = false;
@@ -28,9 +29,15 @@ public class QuickMathsSolver extends Module {
         super("Quick Maths Solver", category.other);
     }
 
+
+    @Override
+    public void guiUpdate() {
+        Utils.correctValue(minResponseTicks, maxResponseTicks);
+    }
+
     @SubscribeEvent
     public void onChatReceived(ClientChatReceivedEvent event) {
-        if(!enabled) return;
+        if(!isEnabled()) return;
         String message = event.message.getUnformattedText();
 
         if (message.startsWith(QUICK_MATHS_PREFIX)) {
@@ -39,8 +46,8 @@ public class QuickMathsSolver extends Module {
             try {
                 int result = evaluateExpression(expression);
                 queuedAnswer = Optional.of(String.valueOf(result));
-                delayTicks = random.nextInt(maxResponseTicks - minResponseTicks) + minResponseTicks;
-                if(replyAfterXSolvers == 0) readyToSolve = true;
+                delayTicks = random.nextInt((int)maxResponseTicks.getInput() - (int)minResponseTicks.getInput()) + (int)minResponseTicks.getInput();
+                if((int)replyAfterXSolvers.getInput() == 0) readyToSolve = true;
                 DecimalFormat df = new DecimalFormat("#.##");
                 Utils.sendMessage("Prepared answer '" + result + "'. Will send after " + replyAfterXSolvers + " solvers and " + df.format(delayTicks/20.0) + "s");
             } catch (IllegalArgumentException e) {
@@ -49,7 +56,7 @@ public class QuickMathsSolver extends Module {
             }
         } else if (message.contains("QUICK MATHS!") && message.contains("answered in")) {
             currentSolvers++;
-            if (currentSolvers >= replyAfterXSolvers) readyToSolve = true;
+            if (currentSolvers >= (int)replyAfterXSolvers.getInput()) readyToSolve = true;
         } else if (message.contains("QUICK MATHS OVER!")) {
             resetState();
         }
@@ -64,7 +71,7 @@ public class QuickMathsSolver extends Module {
 
     @SubscribeEvent
     public void onClientTick(TickEvent.PlayerTickEvent event) {
-        if(!enabled || !readyToSolve || !queuedAnswer.isPresent()) {
+        if(!isEnabled() || !readyToSolve || !queuedAnswer.isPresent()) {
             return;
         }
 

@@ -15,6 +15,7 @@ import slate.module.impl.player.AutoTool;
 import slate.module.impl.player.AutoWeapon;
 import slate.module.impl.render.*;
 import org.jetbrains.annotations.NotNull;
+import slate.module.impl.world.AutoBreaker;
 import slate.module.impl.world.DelayRemover;
 import slate.module.impl.world.FastPlace;
 import slate.module.impl.world.targeting.AntiBot;
@@ -43,7 +44,7 @@ public class ModuleManager {
     public static Chams chams;
     public static Particles particles;
     public static Pointers pointers;
-    // public static Indicators indicators;
+    public static Indicators indicators;
     public static Animations animations;
     public static BreakProgress breakProgress;
     public static AntiShuffle antiShuffle;
@@ -53,6 +54,7 @@ public class ModuleManager {
 
     public static AntiBot antiBot;
     public static TargetManager targetManager;
+    // public static AutoBreaker autoBreaker;
 
     public static DelayRemover delayRemover;
     public static AutoWeapon autoWeapon;
@@ -115,7 +117,7 @@ public class ModuleManager {
         this.addModule(chams = new Chams());
         this.addModule(particles = new Particles());
         this.addModule(pointers = new Pointers());
-        // this.addModule(indicators = new Indicators());
+        this.addModule(indicators = new Indicators());
         this.addModule(animations = new Animations());
         this.addModule(breakProgress = new BreakProgress());
         this.addModule(antiShuffle = new AntiShuffle());
@@ -126,6 +128,7 @@ public class ModuleManager {
         // world
         this.addModule(antiBot = new AntiBot());
         this.addModule(targetManager = new TargetManager());
+        // this.addModule(autoBreaker = new AutoBreaker());
 
         // player
         this.addModule(delayRemover = new DelayRemover());

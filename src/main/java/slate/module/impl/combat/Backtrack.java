@@ -94,32 +94,10 @@ public class Backtrack extends Module {
             return;
         }
 
+        // if target is moving to us, backtracking would make them appear further away
+        // assuming they hit us, we won't be able to hit back, so don't backtrack here
         if (smartDisable.isToggled()) {
-            Vec3 myLookVec = mc.thePlayer.getLookVec();
-            Vec3 targetVelocityVec = new Vec3(
-                    target.posX - target.prevPosX,
-                    0,
-                    target.posZ - target.prevPosZ
-            );
-
-            double velLength = targetVelocityVec.lengthVector();
-
-            // if target is stationary, no real need to delay packets
-            if(velLength < .01d) {
-                shouldSpoof = false;
-                return; // no need to flush queue; packets are minimal here anyway
-            }
-
-            Vec3 targetDirectionVec = targetVelocityVec.normalize();
-
-            // if approaching -1 => target is moving directly to us
-            // if approaching 0 => target is strafing perpendicular to us
-            // if approaching 1 => target is moving away from us
-            double dotProduct = myLookVec.dotProduct(targetDirectionVec);
-
-            // if target is moving to us, backtracking would make them appear further away
-            // assuming they hit us, we won't be able to hit back, so don't backtrack here
-            if (dotProduct < rushThreshold.getInput()) {
+            if (getDotProductBetwMyLookVecAndTargetDirection(target) < rushThreshold.getInput()) {
                 shouldSpoof = false;
                 PacketManager.forceFlushInboundQueue();
                 return;
@@ -128,6 +106,22 @@ public class Backtrack extends Module {
 
         // passed all checks; desirable to backtrack
         shouldSpoof = true;
+    }
+
+    private static double getDotProductBetwMyLookVecAndTargetDirection(EntityPlayer target) {
+        Vec3 myLookVec = mc.thePlayer.getLookVec();
+        Vec3 targetVelocityVec = new Vec3(
+                target.posX - target.prevPosX,
+                0,
+                target.posZ - target.prevPosZ
+        );
+
+        Vec3 targetDirectionVec = targetVelocityVec.normalize();
+
+        // if approaching -1 => target is moving directly to us
+        // if approaching 0 => target is strafing perpendicular to us
+        // if approaching 1 => target is moving away from us
+        return myLookVec.dotProduct(targetDirectionVec);
     }
 
     @SubscribeEvent
@@ -153,8 +147,6 @@ public class Backtrack extends Module {
         if (interpolatedPos == null) {
             return;
         }
-
-        // --- All dynamic color logic has been removed ---
 
         // Always render the box in a single, consistent color (white).
         SlantRenderUtils.drawBboxAtWorldPos(
