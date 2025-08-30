@@ -11,10 +11,14 @@ public class AimAssist extends Module {
     @Getter
     private final NormalAimAssist normalAimAssist;
 
+    @Getter
+    private final SubHitboxAimlock subHitboxAimAssist;
+
     public AimAssist() {
         super("AimAssist", category.combat);
         this.registerSetting(mode = new ModeValue("Mode", this)
                 .add(normalAimAssist = new NormalAimAssist("Normal", this))
+                .add(subHitboxAimAssist = new SubHitboxAimlock("Sub Hitbox", this))
                 .build());
     }
 
